@@ -1,0 +1,8 @@
+__pycache__/
+.env
+webenv/
+venv/
+.env/
+*.pyc
+instance/
+env/
