@@ -29,8 +29,8 @@ def stud_reg():
 
 
 # STUDENT LOGIN
-@app.route("/student/login", methods=["GET", "POST"])
-def stud_log():
+@app.route("/login", methods=["GET", "POST"])
+def login():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
@@ -40,7 +40,7 @@ def stud_log():
             session["student"] = email
             return redirect(url_for("studash"))
 
-    return render_template("stud_log.html")
+    return render_template("login.html")
 
 
 # STUDENT DASHBOARD

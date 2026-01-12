@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %} Login{% endblock %}
+
+{% block content %}
+<section class = "login-page">
+    <div class="login-card">
+        <h2>Welcome Back!</h2>
+        <p>Please enter your credentials to log in.</p>
+        <form class="login-form" method="POST">
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" placeholder="ocfods@example.com" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" placeholder="........" required>
+            </div>
+            <button type="submit", class = "login-btn">Login</button>
+        </form>
+        <div class="login-footer">
+            <span>Don't have an account?</span>
+            <a href="{{ url_for('stud_reg') }}">Sign Up</a>
+        </div> 
+    </div>
+</section>
+{% endblock %}
