@@ -2,16 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Campus Food System{% endblock %}</title>
+    <title>{% block title %}CampusEats{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-    <div class="container">
-        {% block content %}
-        {% endblock %}
-    </div>
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="logo" style="display: flex; align-items: center;">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="OCFODS Logo" class="logo-image">
+            <span style="margin-left: 10px;">OCFODS</span>
+        </div>
+        <nav class="nav-links">
+            <a href="#">How it works</a>
+            <a href="#">Vendors</a>
+            <a href="#">Login</a>
+        </nav>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    {% block content %}{% endblock %}
 
 </body>
 </html>
