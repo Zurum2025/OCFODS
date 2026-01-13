@@ -1,23 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}Student Registration{% endblock %}
+{% block title %}Vendor Registration{% endblock %}
 
 {% block content %}
 <section class="login-page">
     <div class="login-card">
-        <h1>Student Registration</h1>
-        <p class="subtitle">Create your student account</p>
+        <h1>Vendor Registration</h1>
+        <p class="subtitle">Set up your food business</p>
 
         <form class="login-form" method="POST">
             <div class="input-group">
-                <input type="text" placeholder="Full Name" required>
+                <input type="text" placeholder="Business Name" required>
             </div>
             <div class="input-group">
-                <input type="email" placeholder="School Email" required>
+                <input type="email" placeholder="Business Email" required>
+            </div>
+            <div class="input-group">
+                <input type="text" placeholder="Phone Number" required>
             </div>
             <div class="input-group">
                 <input type="password" placeholder="Password" required>
             </div>
+
             <button class="login-btn">Register</button>
         </form>
     </div>

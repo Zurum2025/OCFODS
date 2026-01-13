@@ -16,9 +16,19 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.2rem 5%;
+    padding: 1.2rem 0%;
     background: white;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.nav-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .logo {
@@ -40,6 +50,88 @@ body {
 
 .nav-links a:hover {
     color: #f97316;
+}
+
+ .hamburger {
+    width: 32px;
+    height: 24px;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.hamburger span {
+    height: 3px;
+    width: 100%;
+    background: rgb(50, 46, 102);
+    border-radius: 4px;
+    transition: all 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animation to X */
+.hamburger.open span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger.open span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* MOBILE NAVIGATION */
+@media (max-width: 768px) {
+    .hamburger{
+        display: flex;
+    }
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: 65px;
+        right: 1.5rem;
+        background: #111827;
+        width: 200px;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-radius: 14px;
+        gap: 0;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+        animation: dropDown 0.25s ease;
+    }
+
+    .nav-links.active {
+        display: flex;
+    }
+
+    .nav-links a {
+        padding: 0.75rem 1.2rem;
+        width: 100%;
+        text-align: left;
+    }
+
+    .nav-links a:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+}
+
+@keyframes dropDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* HERO */
@@ -261,5 +353,88 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* MODAL */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 1000;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-box {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    animation: scaleUp 0.3s ease;
+}
+
+.modal-box h2 {
+    margin-bottom: 1rem;
+}
+
+.modal-box p {
+    margin-bottom: 1.5rem;
+    color: #4b5563;
+}
+
+.modal-actions {
+    display: grid;
+    gap: 1rem;
+}
+
+.modal-btn {
+    display: block;
+    padding: 0.9rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    color: white;
+}
+
+.modal-btn.student {
+    background: #2563eb;
+}
+
+.modal-btn.vendor {
+    background: #f97316;
+}
+
+.modal-btn:hover {
+    opacity: 0.9;
+}
+
+.modal-close {
+    margin-top: 1.5rem;
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
     }
 }

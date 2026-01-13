@@ -11,7 +11,7 @@ def landing_page():
 
 
 # STUDENT REGISTRATION
-@app.route("/student/register", methods=["GET", "POST"])
+@app.route("/register/student", methods=["GET", "POST"])
 def stud_reg():
     if request.method == "POST":
         full_name = request.form["full_name"]
@@ -23,9 +23,26 @@ def stud_reg():
         # DATABASE LOGIC WILL COME LATER
         print(full_name, email, password_hash)
 
-        return redirect(url_for("stud_log"))
+        return redirect(url_for("login"))
 
     return render_template("stud_reg.html")
+
+#VENDOR REGISTRATION
+@app.route("/register/vendor", methods=["GET", "POST"])
+def vendor_reg():
+    if request.method == "POST":
+        business_name = request.form["business_name"]
+        email = request.form["email"]
+        password = request.form["password"]
+
+        password_hash = generate_password_hash(password)
+
+        # DATABASE LOGIC WILL COME LATER
+        print(business_name, email, password_hash)
+
+        return redirect(url_for("login"))
+
+    return render_template("vendor_reg.html")
 
 
 # STUDENT LOGIN

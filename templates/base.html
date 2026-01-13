@@ -10,20 +10,67 @@
 <body>
 
     <!-- NAVBAR -->
+
+    
     <header class="navbar">
-        <div class="logo" style="display: flex; align-items: center;">
-            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="OCFODS Logo" class="logo-image">
-            <span style="margin-left: 10px;">OCFODS</span>
+        <div class = "nav-container">
+            <div class="logo" style="display: flex; align-items: center;">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="OCFODS Logo" class="logo-image">
+                <span style="margin-left: 10px;">OCFODS</span>
+            </div>
+            <div class = "hamburger" onclick="toggleMenu(this)">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <nav class="nav-links" id = "navLinks">
+                <a href="#">How it works</a>
+                <a href="#">Vendors</a>
+                <a href="{{ url_for('login') }}">Login</a>
+            </nav>
         </div>
-        <nav class="nav-links">
-            <a href="#">How it works</a>
-            <a href="#">Vendors</a>
-            <a href="{{ url_for('login') }}">Login</a>
-        </nav>
     </header>
 
     <!-- PAGE CONTENT -->
+
+    <!-- Register Role Modal -->
+
+
+
+    
+
     {% block content %}{% endblock %}
+<div id="registerModal" class="modal-overlay">
+    <div class="modal-box">
+        <h2>Register As</h2>
+        <p>Please select your role</p>
+
+        <div class="modal-actions">
+            <a href="/register/student" class="modal-btn student">Student</a>
+            <a href="/register/vendor" class="modal-btn vendor">Vendor</a>
+        </div>
+
+        <button class="modal-close" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById("registerModal").classList.add("active");
+    }
+    
+    function closeModal() {
+        document.getElementById("registerModal").classList.remove("active");
+    }
+</script>
+
+<script>
+    function toggleMenu(el) {
+        document.getElementById("navLinks").classList.toggle("active");
+        el.classList.toggle("open");   
+    }
+</script>
+
 
 </body>
 </html>
