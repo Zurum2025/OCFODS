@@ -8,7 +8,7 @@
         <h1>Vendor Registration</h1>
         <p class="subtitle">Set up your food business</p>
 
-        <form class="login-form" method="POST">
+        <form class="login-form" method="POST" enctype="multipart/form-data">
             <div class="input-group">
                 <input type="text" placeholder="Business Name" required>
             </div>
@@ -21,8 +21,16 @@
             <div class="input-group">
                 <input type="password" placeholder="Password" required>
             </div>
-
-            <button class="login-btn">Register</button>
+            <!-- LOGO UPLOAD -->
+            <div class="input-group">
+                <label>Business Logo</label>
+                <input type="file" name="logo" accept="image/*">
+            </div>
+            <small style="color:#6b7280">
+                Accepted formats: JPG, PNG, WEBP
+            </small>
+            
+            <button type ="submit" class="login-btn">Register</button>
         </form>
     </div>
 </section>

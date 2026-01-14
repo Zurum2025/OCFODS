@@ -1,8 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename 
+import os
+
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"  # temporary, will improve later
+
+UPLOAD_FOLDER = 'static/uploads/vendor_logos'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 # LANDING PAGE
 @app.route("/")
@@ -36,6 +45,14 @@ def vendor_reg():
         password = request.form["password"]
 
         password_hash = generate_password_hash(password)
+        
+        logo = request.files.get('logo')
+        logo_filename = None
+
+        if logo and allowed_file(logo.filename):
+            filename = secure_filename(logo.filename)
+            logo_filename = f"{email}_{filename}"
+            logo.save(os.path.join(app.config['UPLOAD_FOLDER'], logo_filename))
 
         # DATABASE LOGIC WILL COME LATER
         print(business_name, email, password_hash)
@@ -73,6 +90,10 @@ def studash():
 def student_logout():
     session.pop("student", None)
     return redirect(url_for("landing_page"))
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 if __name__ == "__main__":
