@@ -10,7 +10,8 @@ using Flask, following object-oriented design and UML-based system analysis.
 
 ## Features (Current)
 - Landing page
-- Student registration and login
+- login page
+- registration page
 - Session-based authentication
 - Base template with shared layout
 - Basic UI styling
