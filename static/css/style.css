@@ -438,3 +438,60 @@ body {
         opacity: 1;
     }
 }
+
+.vendor-dashboard {
+    display: flex;
+    min-height: 90vh;
+}
+
+.vendor-sidebar {
+    width: 240px;
+    background: #111827;
+    color: white;
+    padding: 2rem 1.5rem;
+}
+
+.vendor-profile {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.vendor-profile img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
+}
+
+.vendor-menu a {
+    display: block;
+    padding: 0.7rem 0;
+    color: #d1d5db;
+    text-decoration: none;
+}
+
+.vendor-menu a:hover {
+    color: #f97316;
+}
+
+.vendor-main {
+    flex: 1;
+    padding: 2.5rem;
+    background: #f9fafb;
+}
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.dash-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+    font-weight: 600;
+}

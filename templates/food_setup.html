@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Setup Your Menu{% endblock %}
+
+{% block content %}
+<section class="login-page">
+    <div class="login-card" style="max-width:600px">
+
+        <h2>Set Up Your Menu</h2>
+        <p>Select or add food items you’ll be selling</p>
+
+        <form method="POST">
+
+            <!-- MAIN DISH -->
+            <h4>Main Dishes</h4>
+            <label><input type="checkbox" name="main_dish[]" value="Rice"> Rice</label>
+            <label><input type="checkbox" name="main_dish[]" value="Beans"> Beans</label>
+            <label><input type="checkbox" name="main_dish[]" value="Spaghetti"> Spaghetti</label>
+
+            <input type="text" name="custom_main_dish" placeholder="Add custom main dish">
+
+            <hr>
+
+            <!-- SAUCE -->
+            <h4>Sauces</h4>
+            <label><input type="checkbox" name="sauce[]" value="Stew"> Stew</label>
+            <label><input type="checkbox" name="sauce[]" value="Egusi"> Egusi</label>
+
+            <input type="text" name="custom_sauce" placeholder="Add custom sauce">
+
+            <hr>
+
+            <!-- TOPPINGS -->
+            <h4>Toppings</h4>
+            <label><input type="checkbox" name="topping[]" value="Egg"> Egg</label>
+            <label><input type="checkbox" name="topping[]" value="Chicken"> Chicken</label>
+
+            <input type="text" name="custom_topping" placeholder="Add custom topping">
+
+            <hr>
+
+            <!-- DRINKS -->
+            <h4>Drinks</h4>
+            <label><input type="checkbox" name="drink[]" value="Coke"> Coke</label>
+            <label><input type="checkbox" name="drink[]" value="Fanta"> Fanta</label>
+
+            <input type="text" name="custom_drink" placeholder="Add custom drink">
+
+            <button type="submit" class="login-btn" style="margin-top:1.5rem">
+                Save Menu
+            </button>
+
+        </form>
+    </div>
+</section>
+{% endblock %}

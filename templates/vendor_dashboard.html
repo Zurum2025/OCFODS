@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Dashboard{% endblock %}
+
+{% block content %}
+<div class="vendor-dashboard">
+
+    <!-- Sidebar -->
+    <aside class="vendor-sidebar">
+        <div class="vendor-profile">
+            <img src="{{ url_for('static', filename='images/default-logo.png') }}" alt="Vendor Logo">
+            <h3>Vendor Name</h3>
+        </div>
+
+        <nav class="vendor-menu">
+            <a href="#">Dashboard</a>
+            <a href="#">Menu</a>
+            <a href="#">Orders</a>
+            <a href="#">Settings</a>
+            <a href="#">Logout</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="vendor-main">
+        <h2>Welcome back 👋</h2>
+        <p>Here’s an overview of your business.</p>
+
+        <div class="dashboard-cards">
+            <div class="dash-card">Menu Items: 0</div>
+            <div class="dash-card">Orders Today: 0</div>
+            <div class="dash-card">Total Sales: ₦0</div>
+        </div>
+    </main>
+
+</div>
+{% endblock %}

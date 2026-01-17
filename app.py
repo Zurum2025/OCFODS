@@ -11,6 +11,7 @@ UPLOAD_FOLDER = 'static/uploads/vendor_logos'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
 # LANDING PAGE
@@ -40,9 +41,9 @@ def stud_reg():
 @app.route("/register/vendor", methods=["GET", "POST"])
 def vendor_reg():
     if request.method == "POST":
-        business_name = request.form["business_name"]
-        email = request.form["email"]
-        password = request.form["password"]
+        business_name = request.form.get("business_name")
+        email = request.form.get("email")
+        password = request.form.get("password")
 
         password_hash = generate_password_hash(password)
         
@@ -57,9 +58,27 @@ def vendor_reg():
         # DATABASE LOGIC WILL COME LATER
         print(business_name, email, password_hash)
 
-        return redirect(url_for("login"))
-
+        
+        return redirect(url_for('food_setup'))
     return render_template("vendor_reg.html")
+
+@app.route('/vendor/food_setup', methods=['GET', 'POST'])
+def food_setup():
+    if request.method == 'POST':
+        main_dishes = request.form.getlist('main_dish[]')
+        custom_main = request.form.get('custom_main_dish')
+
+        sauces = request.form.getlist('sauce[]')
+        custom_sauce = request.form.get('custom_sauce')
+        # handle food items here
+        return redirect(url_for('vendor_dashboard'))
+
+    return render_template('food_setup.html')
+
+@app.route('/vendor/dashboard', methods = ['GET', 'POST'])
+def vendor_dashboard():
+    return render_template('vendor_dashboard.html')
+
 
 
 # STUDENT LOGIN
