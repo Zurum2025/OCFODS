@@ -439,12 +439,8 @@ body {
     }
 }
 
-.vendor-dashboard {
-    display: flex;
-    min-height: 90vh;
-}
 
-.vendor-sidebar {
+.dashboard-sidebar {
     width: 240px;
     background: #111827;
     color: white;
@@ -462,17 +458,6 @@ body {
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 0.5rem;
-}
-
-.vendor-menu a {
-    display: block;
-    padding: 0.7rem 0;
-    color: #d1d5db;
-    text-decoration: none;
-}
-
-.vendor-menu a:hover {
-    color: #f97316;
 }
 
 .vendor-main {
@@ -494,4 +479,41 @@ body {
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.05);
     font-weight: 600;
+}
+
+.dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+
+.dashboard-logo {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.dashboard-nav a {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: #d1d5db;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-nav a:hover {
+    background: #1f2933;
+    color: white;
+}
+
+.dashboard-content {
+    flex: 1;
+    padding: 2rem;
+}
+
+.empty-state {
+    margin-top: 4rem;
+    text-align: center;
+    color: #6b7280;
+    font-size: 1.2rem;
 }

@@ -3,8 +3,44 @@
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
-<h2>Welcome, Student</h2>
-<p>This is your dashboard.</p>
+<div class="dashboard-wrapper">
 
-<a href="/student/logout" class="btn">Logout</a>
+    <!-- SIDEBAR -->
+    <aside class="dashboard-sidebar">
+        <h2 class="dashboard-logo">CampusEats</h2>
+
+        <nav class="dashboard-nav">
+            <a href="#">Vendors</a>
+            <a href="#">Food</a>
+            <a href="#">Orders</a>
+            <a href="#">Settings</a>
+            <a href="#">Logout</a>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-content">
+
+        <h2>Available Vendors</h2>
+
+        {% if vendors %}
+            <div class="vendor-grid">
+                {% for vendor in vendors %}
+                    <div class="vendor-card">
+                        <h4>{{ vendor.name }}</h4>
+                        <p>View Menu</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- EMPTY STATE -->
+            <div class="empty-state">
+                <p>No available vendor</p>
+            </div>
+        {% endif %}
+
+    </main>
+
+</div>
 {% endblock %}
+

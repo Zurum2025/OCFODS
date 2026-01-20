@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename 
+from flask_sqlalchemy import SQLAlchemy
+from models import db, User
 import os
 
 
@@ -11,6 +13,10 @@ UPLOAD_FOLDER = 'static/uploads/vendor_logos'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ocfods.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS']= False
+db.init_app(app)
+
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
@@ -56,7 +62,17 @@ def vendor_reg():
             logo.save(os.path.join(app.config['UPLOAD_FOLDER'], logo_filename))
 
         # DATABASE LOGIC WILL COME LATER
-        print(business_name, email, password_hash)
+        vendor = User(
+            role="vendor",
+            business_name=business_name,
+            email=email,
+            password=password_hash,
+            logo=logo_filename
+        )
+
+        db.session.add(vendor)
+        db.session.commit()
+
 
         
         return redirect(url_for('food_setup'))
@@ -77,6 +93,11 @@ def food_setup():
 
 @app.route('/vendor/dashboard', methods = ['GET', 'POST'])
 def vendor_dashboard():
+    #if "vendor_id" not in session:
+        #return redirect(url_for("login"))
+    
+    #vendor_id = session["vendor_id"]
+    #menu_items = MenuItem.query.filter_by(vendor_id=vendor_id).all()
     return render_template('vendor_dashboard.html')
 
 
@@ -99,8 +120,7 @@ def login():
 # STUDENT DASHBOARD
 @app.route("/student/dashboard")
 def studash():
-    if "student" not in session:
-        return redirect(url_for("stud_log"))
+    
     return render_template("studash.html")
 
 

@@ -3,16 +3,16 @@
 {% block title %}Vendor Dashboard{% endblock %}
 
 {% block content %}
-<div class="vendor-dashboard">
+<div class="dashboard-wrapper">
 
     <!-- Sidebar -->
-    <aside class="vendor-sidebar">
+    <aside class="dashboard-sidebar">
         <div class="vendor-profile">
             <img src="{{ url_for('static', filename='images/default-logo.png') }}" alt="Vendor Logo">
             <h3>Vendor Name</h3>
         </div>
 
-        <nav class="vendor-menu">
+        <nav class="dashboard-nav">
             <a href="#">Dashboard</a>
             <a href="#">Menu</a>
             <a href="#">Orders</a>
@@ -32,6 +32,16 @@
             <div class="dash-card">Total Sales: ₦0</div>
         </div>
     </main>
+
+    {% for item in menu_items %}
+    <div class="menu-item">
+        <strong>{{ item.name }}</strong>
+        <span>₦{{ item.price or "Not set" }}</span>
+    </div>
+    {% else %}
+    <p>No menu items yet</p>
+    {% endfor %}
+
 
 </div>
 {% endblock %}
