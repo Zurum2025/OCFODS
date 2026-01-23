@@ -1,49 +1,73 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename 
-from flask_sqlalchemy import SQLAlchemy
+from werkzeug.utils import secure_filename
 from models import db, User
 import os
 
 
 app = Flask(__name__)
-app.secret_key = "dev-secret-key"  # temporary, will improve later
+app.secret_key = "dev-secret-key"  # temporary
 
-UPLOAD_FOLDER = 'static/uploads/vendor_logos'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+# =========================
+# CONFIG
+# =========================
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ocfods.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS']= False
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static/uploads/vendor_logos")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
+
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ocfods.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
 db.init_app(app)
 
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
-# LANDING PAGE
+# =========================
+# HELPERS
+# =========================
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+# =========================
+# ROUTES
+# =========================
+
+# Landing Page
 @app.route("/")
 def landing_page():
     return render_template("index.html")
 
 
-# STUDENT REGISTRATION
+# Student Registration
 @app.route("/register/student", methods=["GET", "POST"])
 def stud_reg():
     if request.method == "POST":
-        full_name = request.form["full_name"]
-        email = request.form["email"]
-        password = request.form["password"]
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
 
         password_hash = generate_password_hash(password)
 
-        # DATABASE LOGIC WILL COME LATER
-        print(full_name, email, password_hash)
+        student = User(
+            role="student",
+            name= name,
+            email=email,
+            password=password_hash
+        )
 
-        return redirect(url_for("login"))
+        db.session.add(student)
+        db.session.commit()
+
+        return redirect(url_for("studash"))
 
     return render_template("stud_reg.html")
 
-#VENDOR REGISTRATION
+
+# Vendor Registration
 @app.route("/register/vendor", methods=["GET", "POST"])
 def vendor_reg():
     if request.method == "POST":
@@ -52,16 +76,15 @@ def vendor_reg():
         password = request.form.get("password")
 
         password_hash = generate_password_hash(password)
-        
-        logo = request.files.get('logo')
+
+        logo = request.files.get("logo")
         logo_filename = None
 
         if logo and allowed_file(logo.filename):
             filename = secure_filename(logo.filename)
             logo_filename = f"{email}_{filename}"
-            logo.save(os.path.join(app.config['UPLOAD_FOLDER'], logo_filename))
+            logo.save(os.path.join(app.config["UPLOAD_FOLDER"], logo_filename))
 
-        # DATABASE LOGIC WILL COME LATER
         vendor = User(
             role="vendor",
             business_name=business_name,
@@ -73,68 +96,67 @@ def vendor_reg():
         db.session.add(vendor)
         db.session.commit()
 
+        return redirect(url_for("food_setup"))
 
-        
-        return redirect(url_for('food_setup'))
     return render_template("vendor_reg.html")
 
-@app.route('/vendor/food_setup', methods=['GET', 'POST'])
+
+# Vendor food setup
+@app.route("/vendor/food_setup", methods=["GET", "POST"])
 def food_setup():
-    if request.method == 'POST':
-        main_dishes = request.form.getlist('main_dish[]')
-        custom_main = request.form.get('custom_main_dish')
+    if request.method == "POST":
+        # food logic comes next
+        return redirect(url_for("vendor_dashboard"))
 
-        sauces = request.form.getlist('sauce[]')
-        custom_sauce = request.form.get('custom_sauce')
-        # handle food items here
-        return redirect(url_for('vendor_dashboard'))
+    return render_template("food_setup.html")
 
-    return render_template('food_setup.html')
 
-@app.route('/vendor/dashboard', methods = ['GET', 'POST'])
+# Vendor dashboard
+@app.route("/vendor/dashboard")
 def vendor_dashboard():
-    #if "vendor_id" not in session:
-        #return redirect(url_for("login"))
-    
-    #vendor_id = session["vendor_id"]
-    #menu_items = MenuItem.query.filter_by(vendor_id=vendor_id).all()
-    return render_template('vendor_dashboard.html')
+    return render_template("vendor_dashboard.html")
 
 
-
-# STUDENT LOGIN
+# Login applies to both student and vendor
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+        email = request.form.get("email")
+        password = request.form.get("password")
 
-        # TEMPORARY AUTH CHECK (DB LATER)
-        if email == "test@student.com" and password == "1234":
-            session["student"] = email
-            return redirect(url_for("studash"))
+        user = User.query.filter_by(email=email).first()
+
+        if user and check_password_hash(user.password, password):
+            session["user_id"] = user.id
+            session["role"] = user.role
+
+            if user.role == "vendor":
+                return redirect(url_for("vendor_dashboard"))
+            else:
+                return redirect(url_for("studash"))
 
     return render_template("login.html")
 
 
-# STUDENT DASHBOARD
+# Student dashboard
 @app.route("/student/dashboard")
 def studash():
-    
     return render_template("studash.html")
 
 
-# LOGOUT
-@app.route("/student/logout")
-def student_logout():
-    session.pop("student", None)
+# Logout
+@app.route("/logout")
+def logout():
+    session.clear()
     return redirect(url_for("landing_page"))
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# =========================
+# DB INIT
+# =========================
+with app.app_context():
+    db.create_all()
 
 
 if __name__ == "__main__":
     app.run(debug=True)
-
