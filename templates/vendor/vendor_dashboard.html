@@ -1,25 +1,7 @@
-{% extends "base.html" %}
+{% extends "vendor/layout.html" %}
 
-{% block title %}Vendor Dashboard{% endblock %}
 
-{% block content %}
-<div class="dashboard-wrapper">
-
-    <!-- Sidebar -->
-    <aside class="dashboard-sidebar">
-        <div class="vendor-profile">
-            <img src="{{ url_for('static', filename='images/default-logo.png') }}" alt="Vendor Logo">
-            <h3>Vendor Name</h3>
-        </div>
-
-        <nav class="dashboard-nav">
-            <a href="#">Dashboard</a>
-            <a href="#">Menu</a>
-            <a href="#">Orders</a>
-            <a href="#">Settings</a>
-            <a href="#">Logout</a>
-        </nav>
-    </aside>
+{% block vendor_content %}
 
     <!-- Main Content -->
     <main class="vendor-main">
@@ -42,6 +24,4 @@
     <p>No menu items yet</p>
     {% endfor %}
 
-
-</div>
 {% endblock %}

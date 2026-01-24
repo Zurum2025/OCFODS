@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User
+from models import db, User, Food
 import os
 
 
@@ -114,7 +114,7 @@ def food_setup():
 # Vendor dashboard
 @app.route("/vendor/dashboard")
 def vendor_dashboard():
-    return render_template("vendor_dashboard.html")
+    return render_template("vendor/vendor_dashboard.html")
 
 
 # Login applies to both student and vendor
@@ -150,6 +150,53 @@ def logout():
     session.clear()
     return redirect(url_for("landing_page"))
 
+# Vendor menu
+@app.route("/vendor/vendor_menu")
+def vendor_menu():
+    user = require_vendor()
+    foods = Food.query.filter_by(vendor_id=user.id).all()
+    return render_template(
+            "vendor/vendor_menu.html",
+            vendor=user,
+            foods=foods
+        )
+
+@app.route("/vendor/vendor_orders")
+def vendor_orders():
+    user = require_vendor()
+    return render_template("vendor/vendor_orders.html", vendor=user)
+
+@app.route("/vendor/settings", methods=["GET", "POST"])
+def vendor_settings():
+    user = require_vendor()
+
+    if request.method == "POST":
+        user.business_name = request.form["business_name"]
+        user.phone = request.form["phone"]
+        db.session.commit()
+
+    return render_template("vendor/vendor_settings.html", vendor=user)
+
+def require_vendor():
+    if "user_id" not in session:
+        abort(401)
+
+    user = User.query.get(session["user_id"])
+
+    if not user or user.role != "vendor":
+        abort(403)
+
+    return user
+def require_vendor():
+    if "user_id" not in session:
+        abort(401)
+
+    user = User.query.get(session["user_id"])
+
+    if not user or user.role != "vendor":
+        abort(403)
+
+    return user
 
 # =========================
 # DB INIT

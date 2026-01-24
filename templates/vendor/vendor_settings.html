@@ -1,0 +1,11 @@
+{% extends "vendor/layout.html" %}
+
+{% block vendor_content %}
+<h1>Settings</h1>
+
+<form method="POST">
+    <input type="text" name="business_name" value="{{ vendor.business_name }}">
+    <input type="text" name="phone" value="{{ vendor.phone }}">
+    <button>Save</button>
+</form>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="vendor-profile">
+            <img src="{{ url_for('static', filename='images/default-logo.png') }}" alt="Vendor Logo">
+            <h3>Vendor Name</h3>
+        </div>
+
+        <nav class="dashboard-nav">
+            <a href="{{url_for('vendor_dashboard')}}">Dashboard</a>
+            <a href="{{url_for('vendor_menu')}}">Menu</a>
+            <a href="{{url_for('vendor_orders')}}">Orders</a>
+            <a href="{{url_for('vendor_settings')}}">Settings</a>
+            <a href="{{url_for('landing_page')}}">Logout</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="vendor-main">
+        {% block vendor_content %}{% endblock %}
+    </main>
+    
+</div>
+{% endblock %}
