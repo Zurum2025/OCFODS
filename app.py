@@ -251,8 +251,15 @@ def logout():
 def vendor_menu():
     user = require_vendor()
     foods = Food.query.filter_by(vendor_id=user.id).all()
+    
+    grouped_foods = {}
+    for food in foods:
+        category = food.category.name
+        grouped_foods.setdefault(category, []).append(food)
+    
     return render_template(
             "vendor/vendor_menu.html",
+            grouped_foods = grouped_foods,
             vendor=user,
             foods=foods
         )
