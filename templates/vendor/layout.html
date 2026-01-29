@@ -8,8 +8,10 @@
     <!-- Sidebar -->
     <aside class="dashboard-sidebar">
         <div class="vendor-profile">
+            {% if vendor.logo %}
             <img src="{{ url_for('static', filename='images/default-logo.png') }}" alt="Vendor Logo">
-            <h3>Vendor Name</h3>
+            {% endif %}
+            <h3>{{vendor.business_name}}</h3>
         </div>
 
         <nav class="dashboard-nav">
