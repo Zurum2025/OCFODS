@@ -1,9 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -19,7 +20,7 @@ class User(db.Model):
     # Vendor-only fields
     business_name = db.Column(db.String(150))
     logo = db.Column(db.String(255))
-
+    is_active= db.Column(db.Boolean, default = True)
 
 class Food(db.Model):
     __tablename__ = "foods"
@@ -34,7 +35,7 @@ class Food(db.Model):
 
     vendor = db.relationship("User", backref="foods")
     category = db.relationship("FoodCategory", backref="foods")
-
+    is_active = db.Column(db.Boolean, default = True)
 
 class Order(db.Model):
     __tablename__ = "orders"
