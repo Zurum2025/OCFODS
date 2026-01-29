@@ -1,0 +1,16 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block admin_content %}
+<h2>Food Categories</h2>
+
+<form method="POST">
+    <input type="text" name="name" placeholder="Category name" required>
+    <button type="submit">Add Category</button>
+</form>
+
+<ul>
+{% for cat in categories %}
+    <li>{{ cat.name }}</li>
+{% endfor %}
+</ul>
+{% endblock %}

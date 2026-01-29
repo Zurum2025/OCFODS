@@ -1,0 +1,33 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block admin_content %}
+<h1>Orders</h1>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Status</th>
+        <th>Total</th>
+        <th>Date</th>
+    </tr>
+
+    {% for order in orders %}
+    <tr>
+        <td>{{ order.id }}</td>
+        <td>{{ order.status }}</td>
+        <td>₦{{ order.total_amount }}</td>
+        <td>{{ order.order_date }}</td>
+    </tr>
+    <form method="POST"
+      action="{{ url_for('admin_update_order_status', order_id=order.id) }}">
+    <select name="status">
+        <option value="pending">Pending</option>
+        <option value="processing">Processing</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+    </select>
+    <button type="submit">Update</button>
+</form>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block admin_content %}
+<h1>Admin Dashboard</h1>
+
+<div class="stats">
+    <div class="card">Total Users: {{ user_count }}</div>
+    <div class="card">Total Foods: {{ food_count }}</div>
+    <div class="card">Total Orders: {{ order_count }}</div>
+</div>
+{% endblock %}

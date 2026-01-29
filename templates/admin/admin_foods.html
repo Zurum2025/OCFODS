@@ -1,0 +1,40 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block admin_content %}
+<h1>Foods</h1>
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Vendor</th>
+        <th>Category</th>
+        <th>Price</th>
+    </tr>
+
+    {% for food in foods %}
+    <tr>
+        <td>{{ food.name }}</td>
+        <td>{{ food.vendor.business_name }}</td>
+        <td>{{ food.category.name }}</td>
+        <td>₦{{ food.price }}</td>
+        <td>
+            {% if food.availability %}
+                Available
+            {% else %}
+                Unavailable
+            {% endif %}
+        </td>
+        <td>
+            <a href="{{ url_for('admin_toggle_food', food_id=food.id) }}">
+                Toggle
+            </a>
+            |
+            <a href="{{ url_for('admin_delete_food', food_id=food.id) }}"
+               onclick="return confirm('Delete this food?')">
+                Delete
+            </a>
+        </td>   
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
