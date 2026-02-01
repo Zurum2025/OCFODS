@@ -1,0 +1,29 @@
+{% extends "student/stu_layout.html" %}
+{% block student_content%}
+<h1> Food </h1>
+<form method="POST" action="#">
+
+    {% for category, foods in grouped_foods.items() %}
+    <h3>{{ category }}</h3>
+    
+    <table>
+    <tr>
+      <th>Select</th>
+      <th>Food</th>
+      <th>Price</th>
+    </tr>
+    
+    {% for food in foods %}
+    <tr>
+      <td><input type="checkbox" name="food_ids[]" value="{{ food.id }}"></td>
+      <td>{{ food.name }}</td>
+      <td>₦{{ food.price }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+    {% endfor %}
+    
+    <button type="submit">Place Order</button>
+</form>
+{% endblock %}
+    

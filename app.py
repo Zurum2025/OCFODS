@@ -140,12 +140,12 @@ def food_setup():
 
         for category_name, foods in food_groups.items():
 
-            # ✅ QUERY first
+            # QUERY first
             category_obj = FoodCategory.query.filter_by(
                 name=category_name
             ).first()
 
-            # ✅ Create if not exists
+            # Create if not exists
             if not category_obj:
                 category_obj = FoodCategory(name=category_name)
                 db.session.add(category_obj)
@@ -226,7 +226,7 @@ def login():
             return redirect(url_for("vendor_dashboard"))
 
         elif user.role == "student":
-            return redirect(url_for("student_dashboard"))
+            return redirect(url_for("studash"))
 
         else:
             flash("Unauthorized role", "danger")
@@ -237,8 +237,22 @@ def login():
 # Student dashboard
 @app.route("/student/dashboard")
 def studash():
-    return render_template("studash.html")
+    return render_template("student/studash.html")
 
+@app.route("/student/stu_food")
+def stu_food():
+    foods = Food.query.filter_by(availability=True).all()
+
+    grouped_foods = {}
+    for food in foods:
+        category = food.category.name
+        grouped_foods.setdefault(category, []).append(food)
+
+    return render_template(
+        "student/stu_food.html",
+        grouped_foods=grouped_foods,
+        foods=foods,
+        student = current_user)
 # Logout
 @app.route("/logout")
 @login_required
