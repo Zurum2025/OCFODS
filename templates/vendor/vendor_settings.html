@@ -4,8 +4,33 @@
 <h1>Settings</h1>
 
 <form method="POST">
-    <input type="text" name="business_name" value="{{ vendor.business_name }}">
-    <input type="text" name="phone" value="{{ vendor.phone }}">
-    <button>Save</button>
+    <table>
+        <tr>
+            <th>Food</th>
+            <th>Category</th>
+            <th>Price (₦)</th>
+            <th>Available</th>
+        </tr>
+
+        {% for food in foods %}
+        <tr>
+            <td>{{ food.name }}</td>
+            <td>{{ food.category.name }}</td>
+            <td>
+                <input type="number"
+                        name = "price_{{food.id}}"
+                        value = "{{ food.price }}"
+                        step = "0.01"
+                        min = "0">
+            </td>
+            <td><input type="checkbox"
+                        name="available_{{ food.id }}"
+                        {% if food.availability %}checked{% endif %}>
+                    </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <button type="submit">save changes</button>
 </form>
 {% endblock %}

@@ -284,15 +284,30 @@ def vendor_orders():
     return render_template("vendor/vendor_orders.html", vendor=user)
 
 @app.route("/vendor/settings", methods=["GET", "POST"])
+@login_required
 def vendor_settings():
     user = require_vendor()
 
-    if request.method == "POST":
-        user.business_name = request.form["business_name"]
-        user.phone = request.form["phone"]
-        db.session.commit()
+    foods = Food.query.filter_by(vendor_id = current_user.id).all()
 
-    return render_template("vendor/vendor_settings.html", vendor=user)
+    if request.method == "POST":
+        for food in foods:
+            price = request.form.get(f"price_{food.id}")
+            availability = request.form.get(f"available_{food.id}")
+
+            if price is not None:
+                food.price = float(price)
+
+            food.availability = True if availability == "on" else False
+
+        db.session.commit()
+        flash("Menu updated successfully", "success")
+        return redirect(url_for("vendor_settings"))
+
+    return render_template("vendor/vendor_settings.html", 
+                           vendor=current_user,
+                           foods = foods
+                           )
 
 # =========================
 # ADMIN ROUTES
