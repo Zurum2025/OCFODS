@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, Food, Order, FoodCategory
+from models import db, User, Food, Order, FoodCategory, OrderItem
 import os
 
 
@@ -287,12 +287,17 @@ def place_order():
 
     food_ids = request.form.getlist("food_ids")
     vendor_id = request.form.get("vendor_id")
-
+    
+    if not food_ids:
+        flash("Please select at least one food item", "warning")
+        return redirect(request.referrer)
+    
     foods = Food.query.filter(Food.id.in_(food_ids)).all()
-
+    
+    
     subtotal = sum(food.price for food in foods)
 
-    # transport fee comes later
+
     transport_fee = 0
     total = subtotal + transport_fee
 
@@ -304,8 +309,47 @@ def place_order():
         total=total
     )
 
+@app.route("/order/confirm", methods=["POST"])
+@login_required
+def confirm_order():
+    if current_user.role != "student":
+        abort(403)
 
+    food_ids = request.form.getlist("food_ids")
+    foods = Food.query.filter(Food.id.in_(food_ids)).all()
 
+    if not foods:
+        abort(400)
+
+    vendor_id = foods[0].vendor_id
+    subtotal = sum(food.price for food in foods)
+
+    order = Order(
+        customer_id=current_user.id,
+        vendor_id=vendor_id,
+        total_amount=subtotal,
+        status="pending"
+    )
+
+    db.session.add(order)
+    db.session.flush()  # get order.id
+
+    for food in foods:
+        db.session.add(OrderItem(
+            order_id=order.id,
+            food_id=food.id,
+            quantity=1,
+            subtotal=food.price
+        ))
+
+    db.session.commit()
+
+    return redirect(url_for("payment_page", order_id=order.id))
+
+@app.route("/student/payment")
+@login_required
+def payment_page():
+    return render_template("student/payment_page.html")
 # Logout
 @app.route("/logout")
 @login_required

@@ -1,0 +1,35 @@
+{% extends "student/stu_layout.html" %}
+
+{% block student_content %}
+<h2>Order Review</h2>
+
+<table border="1" cellpadding="10" width="100%">
+    <tr>
+        <th>Food</th>
+        <th>Price (₦)</th>
+    </tr>
+
+    {% for food in foods %}
+    <tr>
+        <td>{{ food.name }}</td>
+        <td>₦{{ "%.2f"|format(food.price) }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<hr>
+
+<p><strong>Subtotal:</strong> ₦{{ "%.2f"|format(subtotal) }}</p>
+<p><strong>Transport Fee:</strong> ₦{{ "%.2f"|format(transport_fee) }}</p>
+
+<h3>Total: ₦{{ "%.2f"|format(total) }}</h3>
+
+<form method="POST" action="{{ url_for('confirm_order') }}">
+    {% for food in foods %}
+        <input type="hidden" name="food_ids" value="{{ food.id }}">
+    {% endfor %}
+
+    <button type="submit">Proceed to Payment</button>
+</form>
+
+{% endblock %}

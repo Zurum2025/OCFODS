@@ -3,7 +3,7 @@
 {% block student_content %}
 <h2>{{ vendor.business_name }} Menu</h2>
 
-<form method="POST" action="{{ url_for('stu_orders') }}">
+<form method="POST" action="{{ url_for('place_order') }}">
 
 {% for category, items in foods|groupby('category.name') %}
     <h3>{{ category }}</h3>
