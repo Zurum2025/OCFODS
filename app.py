@@ -236,8 +236,14 @@ def login():
 
 # Student dashboard
 @app.route("/student/dashboard")
+@login_required
 def studash():
-    return render_template("student/studash.html")
+    if current_user.role != "student":
+        abort(403)
+
+    vendors = User.query.filter_by(role="vendor", is_active=True).all()
+    return render_template("student/studash.html",
+                           vendors=vendors)
 
 @app.route("/student/stu_food")
 def stu_food():
@@ -253,6 +259,53 @@ def stu_food():
         grouped_foods=grouped_foods,
         foods=foods,
         student = current_user)
+
+@app.route("/student/dashboard/<int:vendor_id>/menu")
+@login_required
+def stud_vend_menu(vendor_id):
+    if current_user.role != "student":
+        abort(403)
+
+    vendor = User.query.filter_by(id=vendor_id, role="vendor", is_active=True).first_or_404()
+
+    foods = Food.query.filter_by(
+        vendor_id=vendor.id,
+        availability=True
+    ).all()
+
+    return render_template(
+        "student/stu_vend_menu.html",
+        vendor=vendor,
+        foods=foods
+    )
+
+@app.route("/order/place", methods=["POST"])
+@login_required
+def place_order():
+    if current_user.role != "student":
+        abort(403)
+
+    food_ids = request.form.getlist("food_ids")
+    vendor_id = request.form.get("vendor_id")
+
+    foods = Food.query.filter(Food.id.in_(food_ids)).all()
+
+    subtotal = sum(food.price for food in foods)
+
+    # transport fee comes later
+    transport_fee = 0
+    total = subtotal + transport_fee
+
+    return render_template(
+        "student/order_review.html",
+        foods=foods,
+        subtotal=subtotal,
+        transport_fee=transport_fee,
+        total=total
+    )
+
+
+
 # Logout
 @app.route("/logout")
 @login_required

@@ -14,8 +14,14 @@
             <div class="vendor-grid">
                 {% for vendor in vendors %}
                     <div class="vendor-card">
-                        <h4>{{ vendor.name }}</h4>
-                        <p>View Menu</p>
+                        <a href="{{ url_for('stud_vend_menu', vendor_id=vendor.id) }}">
+                            <img src="{{ url_for('static', filename='uploads/vendor_logos/' + vendor.logo) }}"
+                            alt="{{ vendor.business_name }}"
+                            width="120">
+                        
+                        <h4>{{ vendor.business_name }}</h4>
+                        
+                        </a>
                     </div>
                 {% endfor %}
             </div>
