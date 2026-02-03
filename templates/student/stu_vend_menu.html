@@ -1,0 +1,37 @@
+{% extends "student/stu_layout.html" %}
+
+{% block student_content %}
+<h2>{{ vendor.business_name }} Menu</h2>
+
+<form method="POST" action="{{ url_for('stu_orders') }}">
+
+{% for category, items in foods|groupby('category.name') %}
+    <h3>{{ category }}</h3>
+
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Select</th>
+            <th>Food</th>
+            <th>Price (₦)</th>
+        </tr>
+
+        {% for food in items %}
+        <tr>
+            <td>
+                <input type="checkbox"
+                       name="food_ids"
+                       value="{{ food.id }}">
+            </td>
+            <td>{{ food.name }}</td>
+            <td>{{ "%.2f"|format(food.price) }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endfor %}
+
+<input type="hidden" name="vendor_id" value="{{ vendor.id }}">
+
+<button type="submit">Place Order</button>
+
+</form>
+{% endblock %}
