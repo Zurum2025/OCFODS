@@ -3,17 +3,27 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, Food, Order, FoodCategory, OrderItem
+from models import db, User, Food, Order, FoodCategory, OrderItem, Payment
+from dotenv import load_dotenv
+from paystackapi.transaction import Transaction
 import os
 
 
+
+
+
 app = Flask(__name__)
+
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
+
+load_dotenv()
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-app.secret_key = "dev-secret-key"  # temporary
-
+app.config["PAYSTACK_PUBLIC_KEY"] = os.getenv("PAYSTACK_PUBLIC_KEY")
+app.config["PAYSTACK_SECRET_KEY"] = os.getenv("PAYSTACK_SECRET_KEY")
 # =========================
 # CONFIG
 # =========================
@@ -346,10 +356,84 @@ def confirm_order():
 
     return redirect(url_for("payment_page", order_id=order.id))
 
-@app.route("/student/payment")
+@app.route("/payment/<int:order_id>")
 @login_required
-def payment_page():
-    return render_template("student/payment_page.html")
+def payment_page(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    if order.customer_id != current_user.id:
+        abort(403)
+
+    return render_template("student/payment_page.html", order=order)
+
+@app.route("/payment/initiate/<int:order_id>")
+@login_required
+def initiate_payment(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    response = Transaction.initialize(
+        reference=f"ORDER_{order.id}",
+        amount=int(order.total_amount * 100),  # Paystack uses kobo
+        email=current_user.email,
+        metadata={
+            "order_id": order.id,
+            "user_id": current_user.id
+        },
+        callback_url=url_for(
+            "verify_payment",
+            reference=f"ORDER_{order.id}",
+            _external=True
+        )
+    )
+
+    if response["status"]:
+        return redirect(response["data"]["authorization_url"])
+
+    flash("Unable to start payment", "danger")
+    return redirect(url_for("student_dashboard"))
+
+
+@app.route("/payment/verify/<reference>")
+@login_required
+def verify_payment(reference):
+    response = Transaction.verify(reference=reference)
+
+    if not response["status"]:
+        flash("Payment verification failed", "danger")
+        return redirect(url_for("student_dashboard"))
+
+    data = response["data"]
+
+    if data["status"] != "success":
+        flash("Payment not successful", "danger")
+        return redirect(url_for("student_dashboard"))
+
+    # Extract metadata
+    metadata = data["metadata"]
+    order_id = metadata.get("order_id")
+
+    order = Order.query.get_or_404(order_id)
+
+    # Prevent double payment
+    if order.status == "paid":
+        flash("Order already paid", "info")
+        return redirect(url_for("student_dashboard"))
+
+    # Update order
+    order.status = "paid"
+
+    payment = Payment(
+        order_id=order.id,
+        payment_method="paystack",
+        payment_status="successful"
+    )
+
+    db.session.add(payment)
+    db.session.commit()
+
+    flash("Payment successful!", "success")
+    return redirect(url_for("student_dashboard"))
+
 # Logout
 @app.route("/logout")
 @login_required
@@ -531,6 +615,9 @@ def admin_delete_user(user_id):
     flash("User deleted successfully", "success")
     return redirect(url_for("admin_users"))
 
+@app.route("/payment/callback")
+def payment_callback():
+    return "Verified!"
 
 
 def require_vendor():
