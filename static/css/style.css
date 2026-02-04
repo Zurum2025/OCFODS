@@ -532,3 +532,97 @@ body {
 .flash.danger  { background: #f8d7da; color: #721c24; }
 .flash.warning { background: #fff3cd; color: #856404; }
 .flash.info    { background: #d1ecf1; color: #0c5460; }
+
+/* =========================
+   GLOBAL TABLE STYLE
+   ========================= */
+
+   .app-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    font-size: 0.95rem;
+}
+
+.app-table thead {
+    background: #0d6efd; /* primary app color */
+    color: #ffffff;
+}
+
+.app-table th,
+.app-table td {
+    padding: 14px 16px;
+    text-align: left;
+}
+
+.app-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.app-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.app-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.app-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Status badges */
+.badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.badge-warning {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.badge-danger {
+    background: #f8d7da;
+    color: #842029;
+}
+
+/* Action buttons inside tables */
+.table-actions a,
+.table-actions button {
+    margin-right: 6px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-view {
+    background: #0d6efd;
+    color: #fff;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: #fff;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #000;
+}

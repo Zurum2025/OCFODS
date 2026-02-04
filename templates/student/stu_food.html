@@ -6,7 +6,7 @@
     {% for category, foods in grouped_foods.items() %}
     <h3>{{ category }}</h3>
     
-    <table>
+    <table class="app-table">
     <tr>
       <th>Select</th>
       <th>Food</th>
@@ -23,7 +23,7 @@
     </table>
     {% endfor %}
     
-    <button type="submit">Place Order</button>
+    <button class="login-btn" style="margin-top:1.5rem" type="submit">Place Order</button>
 </form>
 {% endblock %}
     

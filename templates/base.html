@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}CampusEats{% endblock %}</title>
+    <title>{% block title %}Seamless{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -27,7 +27,7 @@
         <div class = "nav-container">
             <div class="logo" style="display: flex; align-items: center;">
                 <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="OCFODS Logo" class="logo-image">
-                <span style="margin-left: 10px;">OCFODS</span>
+                <span style="margin-left: 10px;"><a href="{{url_for('landing_page')}}", style="text-decoration: none; color: #f97316;">SEAMLESS</a></span>
             </div>
             <div class = "hamburger" onclick="toggleMenu(this)">
                 <span></span>

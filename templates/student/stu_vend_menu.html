@@ -8,7 +8,7 @@
 {% for category, items in foods|groupby('category.name') %}
     <h3>{{ category }}</h3>
 
-    <table border="1" cellpadding="8">
+    <table class="app-table">
         <tr>
             <th>Select</th>
             <th>Food</th>
@@ -31,7 +31,7 @@
 
 <input type="hidden" name="vendor_id" value="{{ vendor.id }}">
 
-<button type="submit">Place Order</button>
+<button class="login-btn" type="submit">Place Order</button>
 
 </form>
 {% endblock %}
