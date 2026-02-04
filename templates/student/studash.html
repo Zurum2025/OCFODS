@@ -15,9 +15,10 @@
                 {% for vendor in vendors %}
                     <div class="vendor-card">
                         <a href="{{ url_for('stud_vend_menu', vendor_id=vendor.id) }}">
-                            <img src="{{ url_for('static', filename='uploads/vendor_logos/' + vendor.logo) }}"
-                            alt="{{ vendor.business_name }}"
-                            width="120">
+                            <img 
+                            src="{{ url_for('static', filename=vendor.logo and 'uploads/vendor_logos/' + vendor.logo or 'images/default_vendor.png') }}"
+                             alt="{{ vendor.business_name }}">
+
                         
                         <h4>{{ vendor.business_name }}</h4>
                         

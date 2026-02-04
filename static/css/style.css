@@ -626,3 +626,54 @@ body {
     background: #ffc107;
     color: #000;
 }
+
+/* =========================
+   VENDOR GRID
+   ========================= */
+
+   .vendor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 24px;
+    margin-top: 1.5rem;
+}
+
+/* =========================
+   VENDOR CARD
+   ========================= */
+
+   .vendor-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.vendor-card a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.vendor-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 35px rgba(0, 0, 0, 0.12);
+}
+
+.vendor-card img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #f1f1f1;
+    margin-bottom: 12px;
+}
+
+.vendor-card h4 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+}
