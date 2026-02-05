@@ -1,16 +1,23 @@
 {% extends "vendor/layout.html" %}
 
 {% block vendor_content %}
-<h1>Menu</h1>
+<h1 class="vendor-page-title">Menu</h1>
 
-<a href="{{ url_for('food_setup') }}">➕ Add Food</a>
+<a href="{{ url_for('food_setup') }}" class="add-food-btn">➕ Add Food</a>
 
-{% for category, foods in grouped_foods.items() %}
-    <h3>{{ category }}</h3>
-    <ul>
-        {% for food in foods %}
-            <li>{{ food.name }} - ₦{{ food.price }} </li>
-        {% endfor %}
-    </ul>
-{% endfor %}
+<div class="menu-wrapper">
+    {% for category, foods in grouped_foods.items() %}
+        <div class="menu-category">
+            <h3>{{ category }}</h3>
+            <ul class="menu-list">
+                {% for food in foods %}
+                    <li class="menu-item">
+                        <span class="food-name">{{ food.name }}</span>
+                        <span class="food-price"> ₦{{ food.price }} </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>    
+    {% endfor %}
+</div>
 {% endblock %}

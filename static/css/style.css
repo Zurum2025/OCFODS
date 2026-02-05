@@ -677,3 +677,78 @@ body {
     color: #212529;
     margin: 0;
 }
+
+
+/* =========================
+   VENDOR MENU PAGE
+   ========================= */
+
+.vendor-page-title {
+    margin-bottom: 0.5rem;
+}
+
+.add-food-btn {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    padding: 10px 16px;
+    background: #198754;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.add-food-btn:hover {
+    background: #157347;
+}
+
+.menu-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.menu-category {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px 22px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.menu-category h3 {
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212529;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 6px;
+}
+
+
+.menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 4px;
+    border-bottom: 1px dashed #e6e6e6;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.food-name {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.food-price {
+    font-weight: 600;
+    color: #198754; 
+}
