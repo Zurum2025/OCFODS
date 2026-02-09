@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %} Login{% endblock %}
+
+{% block content %}
+<h3>Rate {{ vendor.business_name }}</h3>
+
+<form method="POST">
+    <div class="star-input">
+        {% for i in range(5, 0, -1) %}
+            <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}">
+            <label for="star{{ i }}">★</label>
+        {% endfor %}
+    </div>
+
+    <textarea name="review" placeholder="Optional comment..."></textarea>
+
+    <button type="submit">Submit rating</button>
+</form>
+{% endblock %}

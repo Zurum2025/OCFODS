@@ -810,3 +810,28 @@ body {
     border-radius: 50%;
   }
   
+  .rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.star {
+    font-size: 18px;
+    color: #ccc;
+}
+
+.star.filled {
+    color: gold;
+}
+
+.rating-text {
+    font-size: 13px;
+    color: #555;
+}
+
+.no-rating {
+    font-size: 13px;
+    color: #999;
+    font-style: italic;
+}

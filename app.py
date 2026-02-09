@@ -3,11 +3,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, Food, Order, FoodCategory, OrderItem, Payment
+from models import db, User, Food, Order, FoodCategory, OrderItem, Payment, Rating
 from dotenv import load_dotenv
 from paystackapi.transaction import Transaction
 import os
-
+from sqlalchemy import func
 
 
 
@@ -252,8 +252,24 @@ def studash():
         abort(403)
 
     vendors = User.query.filter_by(role="vendor", is_active=True).all()
-    return render_template("student/studash.html",
-                           vendors=vendors)
+
+    for vendor in vendors:
+        avg_rating, rating_count = (
+            db.session.query(
+                func.avg(Rating.rating),
+                func.count(Rating.id)
+            )
+            .filter(Rating.vendor_id == vendor.id)
+            .first()
+        )
+
+        vendor.avg_rating = avg_rating or 0
+        vendor.rating_count = rating_count or 0
+
+    return render_template(
+        "student/studash.html",
+        vendors=vendors
+    )
 
 @app.route("/student/stu_food")
 def stu_food():
@@ -618,6 +634,52 @@ def admin_delete_user(user_id):
 @app.route("/payment/callback")
 def payment_callback():
     return "Verified!"
+
+@app.route("/rate/vendor/<int:order_id>", methods=["GET", "POST"])
+@login_required
+def rate_vendor(order_id):
+    order = Order.query.get_or_404(order_id)
+
+    # Security checks
+    if order.user_id != current_user.id:
+        abort(403)
+
+    if order.status != "paid":
+        flash("You can only rate completed orders.", "warning")
+        return redirect(url_for("student_dashboard"))
+
+    existing_rating = Rating.query.filter_by(
+        user_id=current_user.id,
+        order_id=order.id
+    ).first()
+
+    if existing_rating:
+        flash("You already rated this order.", "info")
+        return redirect(url_for("student_dashboard"))
+
+    if request.method == "POST":
+        rating_value = int(request.form.get("rating"))
+        comment = request.form.get("comment")
+
+        if rating_value < 1 or rating_value > 5:
+            flash("Invalid rating value.", "danger")
+            return redirect(request.url)
+
+        rating = Rating(
+            user_id=current_user.id,
+            vendor_id=order.vendor_id,
+            order_id=order.id,
+            rating=rating_value,
+            comment=comment
+        )
+
+        db.session.add(rating)
+        db.session.commit()
+
+        flash("Thank you for rating this vendor!", "success")
+        return redirect(url_for("student_dashboard"))
+
+    return render_template("rating.html", order=order)
 
 
 def require_vendor():

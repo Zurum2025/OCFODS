@@ -21,6 +21,22 @@
 
                         
                         <h4>{{ vendor.business_name }}</h4>
+                        <div class="rating">
+                            {% if vendor.rating_count > 0 %}
+                                {% for i in range(1, 6) %}
+                                    {% if i <= vendor.avg_rating|round(0, 'floor') %}
+                                        <span class="star filled">★</span>
+                                    {% else %}
+                                        <span class="star">★</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="rating-text">
+                                    {{ vendor.avg_rating|round(1) }} ({{ vendor.rating_count }})
+                                </span>
+                            {% else %}
+                                <span class="no-rating">(no ratings yet)</span>
+                            {% endif %}
+                        </div>
                         
                         </a>
                     </div>

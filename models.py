@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -86,3 +87,22 @@ class Payment(db.Model):
 
     order = db.relationship("Order", backref="payment")
 
+
+
+class Rating(db.Model):
+    __tablename__ = "ratings"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    vendor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=False)
+
+    rating = db.Column(db.Integer, nullable=False)  # 1–5
+    comment = db.Column(db.Text, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "order_id", name="one_rating_per_order"),
+    )
