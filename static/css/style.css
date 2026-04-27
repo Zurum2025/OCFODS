@@ -198,11 +198,27 @@ body {
 }
 
 /* HERO IMAGE */
+.hero-image {
+    position: relative;
+    width: 420px;
+    height: 420px;
+}
 .hero-image img {
     width: 420px;
-    animation: float 4s ease-in-out infinite;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    animation: float 4s ease-in-out infinite, crossFade 12s infinite;
 }
+.hero-image .img1 { animation-delay: 0s, 0s; }
+.hero-image .img2 { animation-delay: 0s, 4s; }
+.hero-image .img3 { animation-delay: 0s, 8s; }
 
+@keyframes crossFade {
+    0%, 33.33% { opacity: 1; z-index: 1; }
+    33.34%, 100% { opacity: 0; z-index: 0; }
+}
 @keyframes float {
     0% { transform: translateY(0); }
     50% { transform: translateY(-12px); }

@@ -448,7 +448,7 @@ def verify_payment(reference):
     db.session.commit()
 
     flash("Payment successful!", "success")
-    return redirect(url_for("student_dashboard"))
+    return redirect(url_for("rate_vendor", order_id=order.id))
 
 # Logout
 @app.route("/logout")
