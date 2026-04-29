@@ -137,14 +137,20 @@ body {
 /* HERO */
 .hero {
     display: flex;
+    flex-direction: column;
     align-items: center;
+    text-align: center;
+    width: 100%;
+    max-width: 100%;
     justify-content: space-between;
     padding: 5rem 5%;
     gap: 3rem;
+    overflow-x: hidden;
 }
 
 .hero-text {
-    max-width: 520px;
+    padding: 20px;
+    margin-bottom: 40px;
 }
 
 .hero-text h1 {
@@ -167,6 +173,8 @@ body {
 .hero-buttons {
     display: flex;
     gap: 1rem;
+    justify-content: center;
+    align-content: center;
 }
 
 .btn {
@@ -200,21 +208,28 @@ body {
 /* HERO IMAGE */
 .hero-image {
     position: relative;
-    width: 420px;
-    height: 420px;
+    width: 100vw;
+    height: 400px;
+    overflow: hidden;
+    margin: 30px 0;   
 }
 .hero-image img {
-    width: 420px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     position: absolute;
     top: 0;
     left: 0;
     opacity: 0;
     animation: float 4s ease-in-out infinite, crossFade 12s infinite;
 }
+
+/* IMAGE DELAYS */
 .hero-image .img1 { animation-delay: 0s, 0s; }
 .hero-image .img2 { animation-delay: 0s, 4s; }
 .hero-image .img3 { animation-delay: 0s, 8s; }
 
+/* IMAGE ANIMATIONS */
 @keyframes crossFade {
     0%, 33.33% { opacity: 1; z-index: 1; }
     33.34%, 100% { opacity: 0; z-index: 0; }
