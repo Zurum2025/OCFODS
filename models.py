@@ -45,7 +45,8 @@ class Order(db.Model):
     order_date = db.Column(db.DateTime, default=db.func.now())
     status = db.Column(db.String(30), default="pending")
     total_amount = db.Column(db.Float, default=0)
-
+    receipt_file = db.Column(db.String(255))
+    
     customer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     vendor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 

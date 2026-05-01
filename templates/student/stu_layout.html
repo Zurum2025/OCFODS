@@ -15,6 +15,16 @@
             <a href="#">Orders</a>
             <a href="#">Logout</a>
         </nav>
+
+    {% if unrated_orders %}
+    <div class="alert alert-warning">
+        You have {{ unrated_orders|length }} unrated purchase(s).
+
+        {% for order in unrated_orders %}
+        <button onclick="openRating({{ order.id }})">Rate Order {{ order.id }}</button>
+        {% endfor %}
+    </div>
+    {% endif %}
     </aside>
 
     <!-- MAIN CONTENT -->
@@ -25,5 +35,12 @@
     </main>
 
 </div>
+
+<script>
+    function openRating(orderId) {
+        document.getElementById("order_id").value = orderId;
+        document.getElementById("ratingModal").style.display = "block";
+    }
+</script>
 {% endblock %}
 

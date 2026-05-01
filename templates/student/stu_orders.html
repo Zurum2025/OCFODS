@@ -1,1 +1,29 @@
 {% extends "student/stu_layout.html %}
+
+<table>
+    <tr>
+        <th>Order ID</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Receipt</th>
+    </tr>
+
+    {% for order in orders %}
+    <tr>
+        <td>#{{ order.id }}</td>
+        <td>₦{{ order.total_amount }}</td>
+        <td>{{ order.status }}</td>
+        <td>
+            {% if order.receipt_file %}
+                <a href="{{ url_for('static', filename='receipts/' + order.receipt_file) }}" target="_blank">
+                    View
+                </a>
+                |
+                <a href="{{ url_for('static', filename='receipts/' + order.receipt_file) }}" download>
+                    Download
+                </a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>

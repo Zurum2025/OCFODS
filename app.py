@@ -8,7 +8,10 @@ from dotenv import load_dotenv
 from paystackapi.transaction import Transaction
 import os
 from sqlalchemy import func
-
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+import requests
+from datetime import datetime
 
 
 
@@ -266,9 +269,20 @@ def studash():
         vendor.avg_rating = avg_rating or 0
         vendor.rating_count = rating_count or 0
 
+    rate_order_id = request.args.get("rate_order")
+    unrated_orders = Order.query.filter(
+        Order.customer_id == current_user.id,
+        Order.status == "paid",
+        ~Order.id.in_(
+            db.session.query(Rating.order_id)
+        )
+    ).all()
+
     return render_template(
         "student/studash.html",
-        vendors=vendors
+        vendors=vendors,
+        rate_order_id=rate_order_id,
+        unrated_orders=unrated_orders
     )
 
 @app.route("/student/stu_food")
@@ -285,6 +299,12 @@ def stu_food():
         grouped_foods=grouped_foods,
         foods=foods,
         student = current_user)
+
+@app.route("/student/orders")
+@login_required
+def student_orders():
+    orders = Order.query.filter_by(customer_id=current_user.id).all()
+    return render_template("student/orders.html", orders=orders)
 
 @app.route("/student/dashboard/<int:vendor_id>/menu")
 @login_required
@@ -387,68 +407,127 @@ def payment_page(order_id):
 def initiate_payment(order_id):
     order = Order.query.get_or_404(order_id)
 
-    response = Transaction.initialize(
-        reference=f"ORDER_{order.id}",
-        amount=int(order.total_amount * 100),  # Paystack uses kobo
-        email=current_user.email,
-        metadata={
-            "order_id": order.id,
-            "user_id": current_user.id
-        },
-        callback_url=url_for(
-            "verify_payment",
-            reference=f"ORDER_{order.id}",
-            _external=True
-        )
-    )
+    # defing callback and test
+    url = "https://api.paystack.co/transaction/initialize"
+    
+    headers = {
+        "Authorization": f"Bearer {app.config['PAYSTACK_SECRET_KEY']}",
+        "Content-Type": "application/json"
+    }
 
-    if response["status"]:
-        return redirect(response["data"]["authorization_url"])
+    data = {
+        "email": current_user.email,
+        "amount": int(order.total_amount * 100),
+        "reference": f"ORD_{order.id}_{int(datetime.now().timestamp())}", 
+        "callback_url": url_for("verify_payment", _external=True),
+        "metadata": {
+            "order_id": str(order.id), 
+            "user_id": str(current_user.id)
+        }
+    }
 
-    flash("Unable to start payment", "danger")
-    return redirect(url_for("student_dashboard"))
+    response = requests.post(url, json=data, headers=headers)
+    res = response.json()
+
+    if res["status"]:
+        return redirect(res["data"]["authorization_url"])
+
+    flash("Payment initialization failed", "danger")
+    return redirect(url_for("studash"))
+
+def generate_receipt(order):
+    # Folder to save receipts
+    receipt_folder = os.path.join("static", "receipts")
+    os.makedirs(receipt_folder, exist_ok=True)
+
+    filename = f"receipt_{order.id}.pdf"
+    filepath = os.path.join(receipt_folder, filename)
+
+    # Create PDF
+    doc = SimpleDocTemplate(filepath)
+    styles = getSampleStyleSheet()
+
+    elements = []
+
+    elements.append(Paragraph("OFoods Receipt", styles["Title"]))
+    elements.append(Spacer(1, 10))
+
+    elements.append(Paragraph(f"Order ID: {order.id}", styles["Normal"]))
+    elements.append(Paragraph(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles["Normal"]))
+    elements.append(Paragraph(f"Total Paid: ₦{order.total_amount}", styles["Normal"]))
+
+    elements.append(Spacer(1, 10))
+
+    elements.append(Paragraph("Thank you for your purchase!", styles["Italic"]))
+
+    doc.build(elements)
+
+    return filename
 
 
-@app.route("/payment/verify/<reference>")
+
+@app.route("/payment/verify", methods=["GET"])
+@app.route("/payment/verify/<reference>", methods=["GET"])
 @login_required
-def verify_payment(reference):
-    response = Transaction.verify(reference=reference)
+def verify_payment(reference=None):
+    if not reference:
+        reference = request.args.get("reference")
 
-    if not response["status"]:
+    if not reference:
+        flash("No payment reference found", "danger")
+        return redirect(url_for("studash"))
+
+    # Verify with Paystack
+    response = Transaction.verify(reference=reference)
+    if not response or not response.get("status"):
         flash("Payment verification failed", "danger")
-        return redirect(url_for("student_dashboard"))
+        return redirect(url_for("studash"))
 
     data = response["data"]
+    order_id = None
+    metadata = data.get("metadata")
 
-    if data["status"] != "success":
-        flash("Payment not successful", "danger")
-        return redirect(url_for("student_dashboard"))
+    # --- STRATEGY A: Check Metadata ---
+    if isinstance(metadata, dict):
+        order_id = metadata.get("order_id")
+    
+    # --- STRATEGY B: Check Reference String (ORD_22_12345) ---
+    if not order_id and reference and "ORD_" in reference:
+        try:
+            order_id = reference.split("_")[1]
+        except: pass
 
-    # Extract metadata
-    metadata = data["metadata"]
-    order_id = metadata.get("order_id")
+    # --- STRATEGY C: Check Referrer (The Failsafe for your specific error) ---
+    # Your log showed: {'referrer': 'http://127.0.0.1:5000/payment/22'}
+    if not order_id and isinstance(metadata, dict) and 'referrer' in metadata:
+        try:
+            referrer_url = metadata['referrer']
+            # Grabs the last number in the URL (the 22)
+            order_id = referrer_url.rstrip('/').split('/')[-1]
+            print(f"DEBUG: Recovered Order ID {order_id} from Referrer URL")
+        except: pass
 
-    order = Order.query.get_or_404(order_id)
+    if not order_id:
+        print(f"DEBUG: Still no Order ID. Data: {data}")
+        flash("Transaction verified but Order ID not found", "danger")
+        return redirect(url_for("studash"))
 
-    # Prevent double payment
-    if order.status == "paid":
-        flash("Order already paid", "info")
-        return redirect(url_for("student_dashboard"))
+    # Finalize in Database
+    order = db.session.get(Order, int(order_id))
+    if not order:
+        abort(404)
 
-    # Update order
-    order.status = "paid"
-
-    payment = Payment(
-        order_id=order.id,
-        payment_method="paystack",
-        payment_status="successful"
-    )
-
-    db.session.add(payment)
-    db.session.commit()
+    if order.status != "paid":
+        order.status = "paid"
+        payment = Payment(order_id=order.id, payment_method="paystack", payment_status="successful")
+        db.session.add(payment)
+        
+        receipt_file = generate_receipt(order)
+        order.receipt_file = receipt_file
+        db.session.commit()
 
     flash("Payment successful!", "success")
-    return redirect(url_for("rate_vendor", order_id=order.id))
+    return redirect(url_for("studash", rate_order=order.id))
 
 # Logout
 @app.route("/logout")
@@ -635,52 +714,45 @@ def admin_delete_user(user_id):
 def payment_callback():
     return "Verified!"
 
-@app.route("/rate/vendor/<int:order_id>", methods=["GET", "POST"])
+@app.route("/rate/vendor", methods=["POST"])
 @login_required
-def rate_vendor(order_id):
+def submit_rating():
+
+    order_id = request.form.get("order_id")
+    rating_value = request.form.get("rating")
+    comment = request.form.get("comment")
+
+    if not rating_value:
+        flash("Please select a rating", "warning")
+        return redirect(url_for("studash"))
+
     order = Order.query.get_or_404(order_id)
 
-    # Security checks
-    if order.user_id != current_user.id:
+    if order.customer_id != current_user.id:
         abort(403)
 
-    if order.status != "paid":
-        flash("You can only rate completed orders.", "warning")
-        return redirect(url_for("student_dashboard"))
-
-    existing_rating = Rating.query.filter_by(
+    existing = Rating.query.filter_by(
         user_id=current_user.id,
         order_id=order.id
     ).first()
 
-    if existing_rating:
-        flash("You already rated this order.", "info")
-        return redirect(url_for("student_dashboard"))
+    if existing:
+        flash("You already rated this order", "info")
+        return redirect(url_for("studash"))
 
-    if request.method == "POST":
-        rating_value = int(request.form.get("rating"))
-        comment = request.form.get("comment")
+    rating = Rating(
+        user_id=current_user.id,
+        vendor_id=order.vendor_id,
+        order_id=order.id,
+        rating=int(rating_value),
+        comment=comment
+    )
 
-        if rating_value < 1 or rating_value > 5:
-            flash("Invalid rating value.", "danger")
-            return redirect(request.url)
+    db.session.add(rating)
+    db.session.commit()
 
-        rating = Rating(
-            user_id=current_user.id,
-            vendor_id=order.vendor_id,
-            order_id=order.id,
-            rating=rating_value,
-            comment=comment
-        )
-
-        db.session.add(rating)
-        db.session.commit()
-
-        flash("Thank you for rating this vendor!", "success")
-        return redirect(url_for("student_dashboard"))
-
-    return render_template("rating.html", order=order)
-
+    flash("Thanks for your rating!", "success")
+    return redirect(url_for("studash"))
 
 def require_vendor():
     if  not current_user.is_authenticated:
@@ -699,12 +771,6 @@ def require_admin():
         abort(403)
 
     return current_user
-
-
-# DB Init
-#with app.app_context():
-#    db.create_all()
-
 
 if __name__ == "__main__":
     app.run(debug=True)
