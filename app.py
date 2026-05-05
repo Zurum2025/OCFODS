@@ -269,7 +269,7 @@ def studash():
         vendor.avg_rating = avg_rating or 0
         vendor.rating_count = rating_count or 0
 
-    rate_order_id = request.args.get("rate_order")
+    rate_order = request.args.get("rate_order")
     unrated_orders = Order.query.filter(
         Order.customer_id == current_user.id,
         Order.status == "paid",
@@ -281,7 +281,7 @@ def studash():
     return render_template(
         "student/studash.html",
         vendors=vendors,
-        rate_order_id=rate_order_id,
+        rate_order=rate_order,
         unrated_orders=unrated_orders
     )
 
@@ -304,7 +304,7 @@ def stu_food():
 @login_required
 def student_orders():
     orders = Order.query.filter_by(customer_id=current_user.id).all()
-    return render_template("student/orders.html", orders=orders)
+    return render_template("student/stu_orders.html", orders=orders)
 
 @app.route("/student/dashboard/<int:vendor_id>/menu")
 @login_required
@@ -458,6 +458,19 @@ def generate_receipt(order):
 
     elements.append(Spacer(1, 10))
 
+    # Items
+    elements.append(Paragraph("Items:", styles["Heading3"]))
+    for item in order.items:
+        elements.append(Paragraph(
+            f"{item.food.name} - ₦{item.subtotal}",
+            styles["Normal"]
+        ))
+
+    elements.append(Spacer(1, 10))
+
+    elements.append(Paragraph(f"Total Paid: ₦{order.total_amount}", styles["Heading2"]))
+    elements.append(Spacer(1, 10))
+
     elements.append(Paragraph("Thank you for your purchase!", styles["Italic"]))
 
     doc.build(elements)
@@ -487,18 +500,18 @@ def verify_payment(reference=None):
     order_id = None
     metadata = data.get("metadata")
 
-    # --- STRATEGY A: Check Metadata ---
+    # Check Metadata ---
     if isinstance(metadata, dict):
         order_id = metadata.get("order_id")
     
-    # --- STRATEGY B: Check Reference String (ORD_22_12345) ---
+    # Check Reference String (ORD_22_12345) ---
     if not order_id and reference and "ORD_" in reference:
         try:
             order_id = reference.split("_")[1]
         except: pass
 
-    # --- STRATEGY C: Check Referrer (The Failsafe for your specific error) ---
-    # Your log showed: {'referrer': 'http://127.0.0.1:5000/payment/22'}
+    # Check Referrer (The Failsafe for your specific error) ---
+   
     if not order_id and isinstance(metadata, dict) and 'referrer' in metadata:
         try:
             referrer_url = metadata['referrer']
@@ -715,7 +728,6 @@ def payment_callback():
     return "Verified!"
 
 @app.route("/rate/vendor", methods=["POST"])
-@login_required
 def submit_rating():
 
     order_id = request.form.get("order_id")

@@ -398,7 +398,7 @@ body {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
-    z-index: 1000;
+    z-index: 9999;
 }
 
 .modal-overlay.active {
@@ -865,4 +865,122 @@ body {
     font-size: 13px;
     color: #999;
     font-style: italic;
+}
+
+
+/* MODAL BACKDROP */
+.rating-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* SHOW MODAL */
+.rating-modal.active {
+    display: flex;
+}
+
+/* MODAL BOX */
+.rating-modal-content {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s ease;
+}
+
+/* TITLE */
+.rating-modal-title {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+/* STAR RATING */
+.star-rating {
+    direction: rtl;
+    display: inline-flex;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 28px;
+    color: #ccc;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* hover effect */
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: #ff9800;
+}
+
+/* selected stars */
+.star-rating input:checked ~ label {
+    color: #ff9800;
+}
+
+/* TEXTAREA */
+textarea {
+    width: 100%;
+    height: 80px;
+    margin-top: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    resize: none;
+}
+
+/* BUTTONS */
+.rating-modal-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.rating-submit-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.rating-later-btn {
+    background: #ccc;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.rate-btn {
+    background: #ff9800;
+    border: none;
+    padding: 6px 10px;
+    margin-top: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    color: white;
 }
