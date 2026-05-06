@@ -3,7 +3,7 @@
 {% block student_content %}
 <h2>Order Review</h2>
 
-<table border="1" cellpadding="10" width="100%">
+<table class = "order-review">
     <tr>
         <th>Food</th>
         <th>Price (₦)</th>
@@ -17,14 +17,15 @@
     {% endfor %}
 </table>
 
-<hr>
+<hr class="order-review">
 
-<p><strong>Subtotal:</strong> ₦{{ "%.2f"|format(subtotal) }}</p>
-<p><strong>Transport Fee:</strong> ₦{{ "%.2f"|format(transport_fee) }}</p>
+<p class="order-review"><strong>Subtotal:</strong> ₦{{ "%.2f"|format(subtotal) }}</p>
+<p class="order-review"><strong>Transport Fee:</strong> ₦{{ "%.2f"|format(transport_fee) }}</p>
 
-<h3>Total: ₦{{ "%.2f"|format(total) }}</h3>
 
-<form method="POST" action="{{ url_for('confirm_order') }}">
+<h3 class = "order-review">Total: ₦{{ "%.2f"|format(total) }}</h3>
+
+<form method="POST" action="{{ url_for('confirm_order') }}" class = "order-review">
     {% for food in foods %}
         <input type="hidden" name="food_ids" value="{{ food.id }}">
     {% endfor %}
