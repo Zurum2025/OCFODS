@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from paystackapi.transaction import Transaction
 import os
 from sqlalchemy import func
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 import requests
@@ -452,17 +452,32 @@ def generate_receipt(order):
 
     # title
     elements.append(Paragraph("SEAMLESS Receipt", styles["Title"]))
+    elements.append(Paragraph("Food Order Receipt", styles["Normal"]))
     elements.append(Spacer(1, 10))
 
+    #vendor info
+    vendor = order.vendor
+    elements.append(Paragraph(f"Vendor: {vendor.business_name}", styles["Normal"]))
+
+    # Vendor logo (if exists)
+    if vendor.logo:
+        logo_path = os.path.join("static/uploads/vendor_logos", vendor.logo)
+        if os.path.exists(logo_path):
+            elements.append(Image(logo_path, width=80, height=80))
+
+    elements.append(Spacer(1, 10))
 
     # ORDER INFO
     elements.append(Paragraph(f"Order ID: {order.id}", styles["Normal"]))
     elements.append(Paragraph(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles["Normal"]))
     elements.append(Paragraph(f"Vendor: {order.vendor.business_name}", styles["Normal"]))
+    elements.append(Paragraph(f"Transaction Ref: {getattr(order, 'transaction_ref', 'N/A')}", styles["Normal"]))    
     elements.append(Spacer(1, 10))
 
     # TABLE DATA
     data = [["Item", "Qty", "Price (₦)", "Subtotal (₦)"]]
+
+    subtotal = 0
 
     for item in order.items:
         data.append([
@@ -471,13 +486,19 @@ def generate_receipt(order):
             f"{item.food.price:.2f}",
             f"{item.subtotal:.2f}"
         ])
+        subtotal += item.subtotal
 
-    # TOTAL ROW
+    # Transport fee 
+    transport_fee = 0
+
+    data.append(["", "", "Subtotal", f"{subtotal:.2f}"])
+    data.append(["", "", "Transport", f"{transport_fee:.2f}"])
     data.append(["", "", "Total", f"{order.total_amount:.2f}"])
 
-    table = Table(data)
+    table = Table(data, hAlign="LEFT")
+
     table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.darkgreen),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("GRID", (0, 0), (-1, -1), 1, colors.black),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
@@ -486,7 +507,11 @@ def generate_receipt(order):
     elements.append(table)
     elements.append(Spacer(1, 20))
 
-    elements.append(Paragraph("Thank you for your order!", styles["Italic"]))
+    
+    #FOOTER
+
+    elements.append(Paragraph("Thank you for ordering with CampusEats!", styles["Italic"]))
+    elements.append(Paragraph("Contact: support@campuseats.com", styles["Normal"]))
 
     doc.build(elements)
 
@@ -525,7 +550,7 @@ def verify_payment(reference=None):
             order_id = reference.split("_")[1]
         except: pass
 
-    # Check Referrer (The Failsafe for your specific error) ---
+    # Check Referrer ---Failsafe ---
    
     if not order_id and isinstance(metadata, dict) and 'referrer' in metadata:
         try:
@@ -540,10 +565,15 @@ def verify_payment(reference=None):
         flash("Transaction verified but Order ID not found", "danger")
         return redirect(url_for("studash"))
 
+
+
     # Finalize in Database
     order = db.session.get(Order, int(order_id))
     if not order:
         abort(404)
+
+    reference = data["reference"]
+    order.transaction_ref = reference
 
     if order.status != "paid":
         order.status = "paid"
