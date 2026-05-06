@@ -8,8 +8,9 @@ from dotenv import load_dotenv
 from paystackapi.transaction import Transaction
 import os
 from sqlalchemy import func
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
 import requests
 from datetime import datetime
 
@@ -449,29 +450,43 @@ def generate_receipt(order):
 
     elements = []
 
-    elements.append(Paragraph("OFoods Receipt", styles["Title"]))
+    # title
+    elements.append(Paragraph("SEAMLESS Receipt", styles["Title"]))
     elements.append(Spacer(1, 10))
 
+
+    # ORDER INFO
     elements.append(Paragraph(f"Order ID: {order.id}", styles["Normal"]))
     elements.append(Paragraph(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles["Normal"]))
-    elements.append(Paragraph(f"Total Paid: ₦{order.total_amount}", styles["Normal"]))
-
+    elements.append(Paragraph(f"Vendor: {order.vendor.business_name}", styles["Normal"]))
     elements.append(Spacer(1, 10))
 
-    # Items
-    elements.append(Paragraph("Items:", styles["Heading3"]))
+    # TABLE DATA
+    data = [["Item", "Qty", "Price (₦)", "Subtotal (₦)"]]
+
     for item in order.items:
-        elements.append(Paragraph(
-            f"{item.food.name} - ₦{item.subtotal}",
-            styles["Normal"]
-        ))
+        data.append([
+            item.food.name,
+            str(item.quantity),
+            f"{item.food.price:.2f}",
+            f"{item.subtotal:.2f}"
+        ])
 
-    elements.append(Spacer(1, 10))
+    # TOTAL ROW
+    data.append(["", "", "Total", f"{order.total_amount:.2f}"])
 
-    elements.append(Paragraph(f"Total Paid: ₦{order.total_amount}", styles["Heading2"]))
-    elements.append(Spacer(1, 10))
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+    ]))
 
-    elements.append(Paragraph("Thank you for your purchase!", styles["Italic"]))
+    elements.append(table)
+    elements.append(Spacer(1, 20))
+
+    elements.append(Paragraph("Thank you for your order!", styles["Italic"]))
 
     doc.build(elements)
 
