@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Order Intelligence{% endblock %}
+
+{% block content %}
+
+<div class="analytics-page">
+
+    <h1>Order Intelligence</h1>
+
+    <div class="analytics-grid">
+
+        <div class="analytics-card">
+            <h3>Total Orders</h3>
+            <p>{{ total_orders }}</p>
+        </div>
+
+        <div class="analytics-card">
+            <h3>Total Revenue</h3>
+            <p>₦{{ total_revenue }}</p>
+        </div>
+
+        <div class="analytics-card">
+            <h3>Most Popular Vendor</h3>
+
+            {% if popular_vendor %}
+                <p>{{ popular_vendor.business_name }}</p>
+                <small>
+                    {{ popular_vendor.total_orders }} orders
+                </small>
+            {% endif %}
+        </div>
+
+        <div class="analytics-card">
+            <h3>Highest Rated Vendor</h3>
+
+            {% if highest_rated_vendor %}
+                <p>{{ highest_rated_vendor.business_name }}</p>
+
+                <small>
+                    ⭐ {{ highest_rated_vendor.avg_rating|round(1) }}
+                </small>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <h2>Top Foods</h2>
+
+    <div class="top-foods">
+
+        {% for food in top_foods %}
+
+        <div class="food-card">
+            <h4>{{ food.name }}</h4>
+            <p>Ordered {{ food.total }} times</p>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

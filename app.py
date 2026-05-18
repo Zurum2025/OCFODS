@@ -63,6 +63,69 @@ def load_user(user_id):
 def landing_page():
     return render_template("index.html")
 
+@app.route("/analytics")
+def analytics():
+
+    # TOTAL ORDERS
+    total_orders = Order.query.filter_by(status="paid").count()
+
+    # TOTAL REVENUE
+    total_revenue = db.session.query(
+        func.sum(Order.total_amount)
+    ).filter(
+        Order.status == "paid"
+    ).scalar() or 0
+
+    # MOST POPULAR VENDOR
+    popular_vendor = db.session.query(
+        User.business_name,
+        func.count(Order.id).label("total_orders")
+    ).join(
+        Order, Order.vendor_id == User.id
+    ).filter(
+        Order.status == "paid"
+    ).group_by(
+        User.id
+    ).order_by(
+        func.count(Order.id).desc()
+    ).first()
+
+    # HIGHEST RATED VENDOR
+    highest_rated_vendor = db.session.query(
+        User.business_name,
+        func.avg(Rating.rating).label("avg_rating")
+    ).join(
+        Rating, Rating.vendor_id == User.id
+    ).group_by(
+        User.id
+    ).order_by(
+        func.avg(Rating.rating).desc()
+    ).first()
+
+    # TOP FOODS
+    top_foods = db.session.query(
+        Food.name,
+        func.count(OrderItem.food_id).label("total")
+    ).join(
+        OrderItem
+    ).group_by(
+        Food.id
+    ).order_by(
+        func.count(OrderItem.food_id).desc()
+    ).limit(5).all()
+
+    return render_template(
+        "analytics.html",
+
+        total_orders=total_orders,
+        total_revenue=total_revenue,
+
+        popular_vendor=popular_vendor,
+        highest_rated_vendor=highest_rated_vendor,
+
+        top_foods=top_foods
+    )
+
 # Student Registration
 @app.route("/register/student", methods=["GET", "POST"])
 def stud_reg():

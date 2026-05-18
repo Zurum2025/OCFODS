@@ -1101,9 +1101,7 @@ textarea {
     transform: translateY(-1px);
 }
 
-/* ==========================================================================
-   Order Review Page - General Typography
-   ========================================================================== */
+/* Order Review Page - General Typography */
 .order-review h2, h3, p, button {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -1116,9 +1114,7 @@ textarea {
 }
 
 
-/* ==========================================================================
-   Cost Breakdown Section
-   ========================================================================== */
+/* Cost Breakdown Section */
 .order-review hr {
     border: none;
     border-top: 2px dashed #edf1f0;
@@ -1150,9 +1146,7 @@ textarea {
     box-shadow: none;
 }
 
-/* ==========================================================================
-   Action Form & Button
-   ========================================================================== */
+/* Action Form & Button */
 .order-review form {
     margin-top: 32px;
     text-align: right; /* Align the checkout button to the right */
@@ -1182,4 +1176,44 @@ textarea {
 .order-review button[type="submit"]:active {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+/* ANALYTICS PAGE */
+
+.analytics-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+    margin-top:20px;
+}
+
+.analytics-card{
+    background:#fff;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+.analytics-card h3{
+    margin-bottom:10px;
+    color:#555;
+}
+
+.analytics-card p{
+    font-size:28px;
+    font-weight:bold;
+}
+
+.top-foods{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:20px;
+    margin-top:20px;
+}
+
+.food-card{
+    background:#fff;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
