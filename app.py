@@ -114,6 +114,23 @@ def analytics():
         func.count(OrderItem.food_id).desc()
     ).limit(5).all()
 
+    # FOOD CHART DATA
+    food_chart_labels = [food.name for food in top_foods]
+    food_chart_values = [food.total for food in top_foods]
+
+    # VENDOR POPULARITY
+    vendor_data = db.session.query(
+        User.business_name,
+        func.count(Order.id)
+    ).join(
+        Order, Order.vendor_id == User.id
+    ).group_by(
+        User.id
+    ).all()
+
+    vendor_labels = [v[0] for v in vendor_data]
+    vendor_values = [v[1] for v in vendor_data]
+
     return render_template(
         "analytics.html",
 
@@ -122,6 +139,12 @@ def analytics():
 
         popular_vendor=popular_vendor,
         highest_rated_vendor=highest_rated_vendor,
+
+        food_chart_labels=food_chart_labels,
+        food_chart_values=food_chart_values,
+
+        vendor_labels=vendor_labels,
+        vendor_values=vendor_values,
 
         top_foods=top_foods
     )

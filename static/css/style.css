@@ -1217,3 +1217,18 @@ textarea {
     border-radius:12px;
     box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
+
+/*ANALYTIC DASHBOARD CHARTS*/
+.chart-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(400px,1fr));
+    gap:30px;
+    margin-top:40px;
+}
+
+.chart-card{
+    background:#fff;
+    padding:25px;
+    border-radius:18px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.08);
+}

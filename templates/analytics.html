@@ -42,8 +42,23 @@
                 </small>
             {% endif %}
         </div>
+    </div>
+<!--Dashboard-->
+    <div class="chart-grid">
+
+        <div class="chart-card">
+            <h3>Most Ordered Foods</h3>
+            <canvas id="foodChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3>Vendor Popularity</h3>
+            <canvas id="vendorChart"></canvas>
+        </div>
 
     </div>
+<!--End-->
+    
 
     <h2>Top Foods</h2>
 
@@ -62,4 +77,60 @@
 
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+/* =========================
+   TOP FOODS BAR CHART
+========================= */
+
+const foodCtx = document.getElementById('foodChart');
+
+new Chart(foodCtx, {
+    type: 'bar',
+
+    data: {
+        labels: {{ food_chart_labels|tojson }},
+        datasets: [{
+            label: 'Orders',
+
+            data: {{ food_chart_values|tojson }},
+
+            borderWidth: 1
+        }]
+    },
+
+    options: {
+        responsive: true
+    }
+});
+
+
+/* =========================
+   VENDOR PIE CHART
+========================= */
+
+const vendorCtx = document.getElementById('vendorChart');
+
+new Chart(vendorCtx, {
+
+    type: 'pie',
+
+    data: {
+
+        labels: {{ vendor_labels|tojson }},
+
+        datasets: [{
+            data: {{ vendor_values|tojson }}
+        }]
+    },
+
+    options: {
+        responsive: true
+    }
+});
+
+</script>
 {% endblock %}
