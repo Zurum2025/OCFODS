@@ -1232,3 +1232,34 @@ textarea {
     border-radius:18px;
     box-shadow:0 4px 15px rgba(0,0,0,0.08);
 }
+
+.chart-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.chart-filters{
+    display:flex;
+    gap:10px;
+}
+
+.filter-btn{
+    border:none;
+    padding:10px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:0.3s ease;
+    font-weight:600;
+}
+
+.filter-btn:hover{
+    transform:translateY(-2px);
+}
+
+.filter-btn.active{
+    background:#ff6600;
+    color:white;
+    box-shadow:0 4px 10px rgba(255,102,0,0.3);
+}
