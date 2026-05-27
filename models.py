@@ -21,6 +21,13 @@ class User(UserMixin, db.Model):
     # Vendor-only fields
     business_name = db.Column(db.String(150))
     logo = db.Column(db.String(255))
+    
+
+    # Vendor delivery/location fields
+    address = db.Column(db.String(255))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    delivery_fee_km = db.Column(db.Float, default = 200)
     is_active= db.Column(db.Boolean, default = True)
 
 class Food(db.Model):

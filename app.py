@@ -130,6 +130,76 @@ def analytics():
 
     vendor_labels = [v[0] for v in vendor_data]
     vendor_values = [v[1] for v in vendor_data]
+    
+    # GENERAL FOOD ANALYTICS
+
+    general_foods = db.session.query(
+        Food.name,
+        func.count(OrderItem.food_id).label("total")
+    ).join(
+        OrderItem
+    ).group_by(
+        Food.id
+    ).order_by(
+        func.count(OrderItem.food_id).desc()
+    ).limit(10).all()
+
+    # MAIN DISH ANALYTICS
+
+    main_foods = db.session.query(
+        Food.name,
+        func.count(OrderItem.food_id).label("total")
+    ).join(
+        OrderItem
+    ).join(
+        FoodCategory
+    ).filter(
+        FoodCategory.name == "Main Dish"
+    ).group_by(
+        Food.id
+    ).all()
+
+    # TOPPING ANALYTICS
+
+    topping_foods = db.session.query(
+        Food.name,
+        func.count(OrderItem.food_id).label("total")
+    ).join(
+        OrderItem
+    ).join(
+        FoodCategory
+    ).filter(
+        FoodCategory.name == "Topping"
+    ).group_by(
+        Food.id
+    ).all()
+
+    # DRINK ANALYTICS
+
+    drink_foods = db.session.query(
+        Food.name,
+        func.count(OrderItem.food_id).label("total")
+    ).join(
+        OrderItem
+    ).join(
+        FoodCategory
+    ).filter(
+        FoodCategory.name == "Drink"
+    ).group_by(
+        Food.id
+    ).all()
+
+    general_labels = [f.name for f in general_foods]
+    general_values = [f.total for f in general_foods]
+
+    main_labels = [f.name for f in main_foods]
+    main_values = [f.total for f in main_foods]
+
+    topping_labels = [f.name for f in topping_foods]
+    topping_values = [f.total for f in topping_foods]
+
+    drink_labels = [f.name for f in drink_foods]
+    drink_values = [f.total for f in drink_foods]
 
     return render_template(
         "analytics.html",
@@ -145,6 +215,18 @@ def analytics():
 
         vendor_labels=vendor_labels,
         vendor_values=vendor_values,
+
+        general_labels=general_labels,
+        general_values=general_values,
+
+        main_labels=main_labels,
+        main_values=main_values,
+
+        topping_labels=topping_labels,
+        topping_values=topping_values,
+
+        drink_labels=drink_labels,
+        drink_values=drink_values,
 
         top_foods=top_foods
     )
@@ -719,6 +801,23 @@ def vendor_settings():
                 food.price = float(price)
 
             food.availability = True if availability == "on" else False
+            
+        # save delivery rate
+        delivery_fee = request.form.get("delivery_fee_per_km")
+        if delivery_fee:
+            current_user.delivery_fee_per_km = float(delivery_fee)
+        
+        # save location
+        latitude = request.form.get("latitude")
+        longitude = request.form.get("longitude")
+        address = request.form.get("address")
+
+        if latitude and longitude:
+            current_user.latitude = float(latitude)
+            current_user.longitude = float(longitude)
+
+        if address:
+            current_user.address = address
 
         db.session.commit()
         flash("Menu updated successfully", "success")
