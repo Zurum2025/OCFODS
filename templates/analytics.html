@@ -47,7 +47,36 @@
     <div class="chart-grid">
 
         <div class="chart-card">
-            <h3>Most Ordered Foods</h3>
+            <div class="chart-header">
+
+                <h3>Food Order Intelligence</h3>
+        
+                <div class="chart-filters">
+        
+                    <button class="filter-btn active"
+                            onclick="switchFoodChart('general', this)">
+                        General
+                    </button>
+        
+                    <button class="filter-btn"
+                            onclick="switchFoodChart('main', this)">
+                        Main
+                    </button>
+        
+                    <button class="filter-btn"
+                            onclick="switchFoodChart('topping', this)">
+                        Topping
+                    </button>
+        
+                    <button class="filter-btn"
+                            onclick="switchFoodChart('drink', this)">
+                        Drink
+                    </button>
+        
+                </div>
+        
+            </div>
+        
             <canvas id="foodChart"></canvas>
         </div>
 
@@ -86,27 +115,59 @@
    TOP FOODS BAR CHART
 ========================= */
 
+const foodDatasets = {
+    general: {
+        labels: {{ general_labels|tojson }},
+        values: {{ general_values|tojson }}
+    },
+    main: {
+        labels: {{ main_labels|tojson }},
+        values: {{ main_values|tojson }}
+    },
+    topping: {
+        labels: {{ topping_labels|tojson }},
+        values: {{ topping_values|tojson }}
+    },
+    drink: {
+        labels: {{ drink_labels|tojson }},
+        values: {{ drink_values|tojson }}
+    }
+};
+
 const foodCtx = document.getElementById('foodChart');
 
-new Chart(foodCtx, {
+const foodChart = new Chart(foodCtx, {
     type: 'bar',
-
     data: {
-        labels: {{ food_chart_labels|tojson }},
+        labels: foodDatasets.general.labels,
         datasets: [{
             label: 'Orders',
-
-            data: {{ food_chart_values|tojson }},
-
+            data: foodDatasets.general.values,
             borderWidth: 1
         }]
     },
-
     options: {
-        responsive: true
+        responsive: true,
+        animation: {
+            duration: 1200
+        }
     }
 });
 
+function switchFoodChart(category, button){
+    foodChart.data.labels =
+        foodDatasets[category].labels;
+
+    foodChart.data.datasets[0].data =
+        foodDatasets[category].values;
+
+    foodChart.update();
+
+    document.querySelectorAll(".filter-btn")
+        .forEach(btn => btn.classList.remove("active"));
+
+    button.classList.add("active");
+}
 
 /* =========================
    VENDOR PIE CHART
