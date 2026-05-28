@@ -58,6 +58,12 @@ class Order(db.Model):
     customer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     vendor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
+    customer_latitude = db.Column(db.Float)
+    customer_longitude = db.Column(db.Float)
+
+    delivery_distance_km = db.Column(db.Float, default=0)
+    transportation_fee = db.Column(db.Float, default=0)
+
     customer = db.relationship("User", foreign_keys=[customer_id])
     vendor = db.relationship("User", foreign_keys=[vendor_id])
 

@@ -538,11 +538,15 @@ def confirm_order():
 
     vendor_id = foods[0].vendor_id
     subtotal = sum(food.price for food in foods)
+    customer_latitude = request.form.get("customer_latitude")
+    customer_longitude = request.form.get("customer_longitude")
 
     order = Order(
         customer_id=current_user.id,
         vendor_id=vendor_id,
         total_amount=subtotal,
+        customer_latitude=float(customer_latitude),
+        customer_longitude=float(customer_longitude), 
         status="pending"
     )
 
