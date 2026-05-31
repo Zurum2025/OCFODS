@@ -13,6 +13,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 import requests
 from datetime import datetime
+from geopy.distance import geodesic
 
 
 
@@ -513,14 +514,28 @@ def place_order():
     subtotal = sum(food.price for food in foods)
 
 
-    transport_fee = 0
-    total = subtotal + transport_fee
+    customer_latitude = request.form.get("customer_latitude")
+    customer_longitude = request.form.get("customer_longitude")
+    vendor = User.query.get(vendor_id)
+    #vendor coordinates
+    vendor_coords = (vendor.latitude, vendor.longitude)
+    
+    #customer coordinates
+    customer_coords = ( customer_latitude, customer_longitude)
+
+    #calculate distance
+    distance_km = geodesic(vendor_coords, customer_coords).km
+
+    # Calculate transportation fee
+    transportation_fee = distance_km * vendor.delivery_fee_km
+    
+    total = subtotal + transportation_fee
 
     return render_template(
         "student/order_review.html",
         foods=foods,
         subtotal=subtotal,
-        transport_fee=transport_fee,
+        transportation_fee=transportation_fee,
         total=total
     )
 
@@ -537,16 +552,36 @@ def confirm_order():
         abort(400)
 
     vendor_id = foods[0].vendor_id
+    vendor = User.query.get(vendor_id)
+
     subtotal = sum(food.price for food in foods)
+
     customer_latitude = request.form.get("customer_latitude")
     customer_longitude = request.form.get("customer_longitude")
+
+    #vendor coordinates
+    vendor_coords = (vendor.latitude, vendor.longitude)
+    
+    #customer coordinates
+    customer_coords = ( customer_latitude, customer_longitude)
+
+    #calculate distance
+    distance_km = geodesic(vendor_coords, customer_coords).km
+
+    # Calculate transportation fee
+    transportation_fee = distance_km * vendor.delivery_fee_km
+
+    # Final total
+    total_amount = subtotal + transportation_fee
 
     order = Order(
         customer_id=current_user.id,
         vendor_id=vendor_id,
-        total_amount=subtotal,
-        customer_latitude=float(customer_latitude),
-        customer_longitude=float(customer_longitude), 
+        total_amount=total_amount,
+        customer_latitude=customer_latitude,
+        customer_longitude=customer_longitude,
+        delivery_distance_km=distance_km,
+        transportation_fee=transportation_fee, 
         status="pending"
     )
 
@@ -661,10 +696,10 @@ def generate_receipt(order):
         subtotal += item.subtotal
 
     # Transport fee 
-    transport_fee = 0
+    transportation_fee = 0
 
     data.append(["", "", "Subtotal", f"{subtotal:.2f}"])
-    data.append(["", "", "Transport", f"{transport_fee:.2f}"])
+    data.append(["", "", "Transport", f"{transportation_fee:.2f}"])
     data.append(["", "", "Total", f"{order.total_amount:.2f}"])
 
     table = Table(data, hAlign="LEFT")
@@ -807,9 +842,9 @@ def vendor_settings():
             food.availability = True if availability == "on" else False
             
         # save delivery rate
-        delivery_fee = request.form.get("delivery_fee_per_km")
+        delivery_fee = request.form.get("delivery_fee_km")
         if delivery_fee:
-            current_user.delivery_fee_per_km = float(delivery_fee)
+            current_user.delivery_fee_km = float(delivery_fee)
         
         # save location
         latitude = request.form.get("latitude")

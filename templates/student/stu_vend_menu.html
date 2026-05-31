@@ -30,8 +30,47 @@
 {% endfor %}
 
 <input type="hidden" name="vendor_id" value="{{ vendor.id }}">
+<input type="hidden" name="customer_latitude" id="customer_latitude">
+<input type="hidden" name="customer_longitude" id="customer_longitude">
 
 <button class="login-btn" type="submit">Place Order</button>
 
 </form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    
+        const orderForm = document.querySelector("form");
+    
+        orderForm.addEventListener("submit", function(event) {
+    
+            event.preventDefault();
+    
+            if (navigator.geolocation) {
+    
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+    
+                        document.getElementById("customer_latitude").value =
+                            position.coords.latitude;
+    
+                        document.getElementById("customer_longitude").value =
+                            position.coords.longitude;
+    
+                        orderForm.submit();
+                    },
+    
+                    function(error) {
+                        alert("Location access is required to place an order.");
+                    }
+                );
+    
+            } else {
+                alert("Geolocation is not supported on this browser.");
+            }
+    
+        });
+    
+    });
+</script>
 {% endblock %}

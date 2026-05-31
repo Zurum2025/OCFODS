@@ -20,7 +20,7 @@
 <hr class="order-review">
 
 <p class="order-review"><strong>Subtotal:</strong> ₦{{ "%.2f"|format(subtotal) }}</p>
-<p class="order-review"><strong>Transport Fee:</strong> ₦{{ "%.2f"|format(transport_fee) }}</p>
+<p class="order-review"><strong>Transport Fee:</strong> ₦{{ "%.2f"|format(transportation_fee) }}</p>
 
 
 <h3 class = "order-review">Total: ₦{{ "%.2f"|format(total) }}</h3>
@@ -28,27 +28,9 @@
 <form method="POST" action="{{ url_for('confirm_order') }}" class = "order-review">
     {% for food in foods %}
         <input type="hidden" name="food_ids" value="{{ food.id }}">
-        <input type="hidden" name="customer_latitude" id="customer_latitude" >
-        <input type="hidden" name="customer_longitude" id="customer_longitude" >
     {% endfor %}
 
     <button type="submit">Proceed to Payment</button>
 </form>
 
-<script>
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
-    
-            document.getElementById("customer_latitude").value =
-                position.coords.latitude;
-    
-            document.getElementById("customer_longitude").value =
-                position.coords.longitude;
-    
-        },
-        function(error) {
-            alert("Location access is required for delivery.");
-        }
-    );
-</script>
 {% endblock %}

@@ -5,7 +5,7 @@
 <h2>Payment</h2>
 
 <p>Order ID: {{ order.id }}</p>
-<p>Total Amount: ₦{{ order.total_amount }}</p>
+<p>Total Amount: ₦{{ (order.total_amount)|int }}</p>
 
 <button onclick="payWithPaystack()">Pay Now</button>
 
@@ -16,7 +16,7 @@ function payWithPaystack(){
   let handler = PaystackPop.setup({
     key: "{{ config.PAYSTACK_PUBLIC_KEY }}",
     email: "{{ current_user.email }}",
-    amount: {{ order.total_amount * 100 }},
+    amount: {{ (order.total_amount * 100)|int }},
     callback: function(response){
       window.location.href = "/payment/verify/" + response.reference;
     }

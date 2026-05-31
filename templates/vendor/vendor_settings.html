@@ -43,7 +43,7 @@
 
         <p>
             Your current delivery rate:
-            <strong>₦{{ current_user.delivery_fee_per_km }}/km</strong>
+            <strong>₦{{ current_user.delivery_fee_km }}/km</strong>
         </p>
 
         <label>Delivery Fee Per KM</label>
@@ -51,8 +51,8 @@
         <input
             type="number"
             step="0.01"
-            name="delivery_fee_per_km"
-            value="{{ current_user.delivery_fee_per_km }}"
+            name="delivery_fee_km"
+            value="{{ current_user.delivery_fee_km }}"
         >
 
         <br><br>
