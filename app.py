@@ -822,7 +822,36 @@ def vendor_menu():
 @app.route("/vendor/vendor_orders")
 def vendor_orders():
     user = require_vendor()
-    return render_template("vendor/vendor_orders.html", vendor=user)
+
+    orders = Order.query.filter_by(
+        vendor_id=user.id
+    ).order_by(Order.order_date.desc()).all()
+
+    return render_template(
+        "vendor/vendor_orders.html",
+        vendor=user,
+        orders=orders
+    )
+
+@app.route("/vendor/order/<int:order_id>/take")
+@login_required
+def take_order(order_id):
+
+    order = Order.query.get_or_404(order_id)
+
+    if order.vendor_id != current_user.id:
+        abort(403)
+
+    order.status = "accepted"
+
+    db.session.commit()
+
+    flash(
+        f"Order #{order.id} accepted successfully",
+        "success"
+    )
+
+    return redirect(url_for("vendor_orders"))
 
 @app.route("/vendor/settings", methods=["GET", "POST"])
 @login_required

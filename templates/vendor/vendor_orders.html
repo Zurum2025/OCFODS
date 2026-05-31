@@ -1,6 +1,78 @@
 {% extends "vendor/layout.html" %}
 
 {% block vendor_content %}
+
 <h1>Orders</h1>
+
+{% if orders %}
+
+<table class="app-table">
+
+    <tr>
+        <th>Order</th>
+        <th>Date</th>
+        <th>Customer</th>
+        <th>Total</th>
+        <th>Distance</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    {% for order in orders %}
+
+    <tr>
+
+        <td>#{{ order.id }}</td>
+
+        <td>
+            {{ order.order_date.strftime("%d %b %Y") }}
+        </td>
+
+        <td>
+            {{ order.customer.name }}
+        </td>
+
+        <td>
+            ₦{{ "%.2f"|format(order.total_amount) }}
+        </td>
+
+        <td>
+            {{ "%.2f"|format(order.delivery_distance_km or 0) }} km
+        </td>
+
+        <td>
+            {{ order.status }}
+        </td>
+
+        <td>
+
+            {% if order.status == "paid" %}
+
+            <a
+                href="{{ url_for('take_order', order_id=order.id) }}"
+                class="login-btn"
+            >
+                Take Order
+            </a>
+
+            {% else %}
+
+            --
+
+            {% endif %}
+
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% else %}
+
 <p>No orders yet.</p>
+
+{% endif %}
+
 {% endblock %}
