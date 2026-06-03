@@ -55,6 +55,11 @@
                 Take Order
             </a>
 
+            <a href="{{ url_for('vendor_order_details',
+                    order_id=order.id) }}">
+                View Details
+            </a>
+            
             {% else %}
 
             --

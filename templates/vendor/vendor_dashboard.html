@@ -1,27 +1,115 @@
 {% extends "vendor/layout.html" %}
 
-
 {% block vendor_content %}
 
-    <!-- Main Content -->
-    <main class="vendor-main">
-        <h2>Welcome back 👋</h2>
-        <p>Here’s an overview of your business.</p>
+<div class="dashboard-header">
+    <h1>Vendor Dashboard</h1>
+    <p>Manage your incoming orders</p>
+</div>
 
-        <div class="dashboard-cards">
-            <div class="dash-card">Menu Items: 0</div>
-            <div class="dash-card">Orders Today: 0</div>
-            <div class="dash-card">Total Sales: ₦0</div>
+<!-- INCOMING ORDERS -->
+<div class="incoming-orders">
+
+    <h2>Incoming Orders ({{ pending_orders|length }})</h2>
+
+    {% if pending_orders %}
+
+        {% for order in pending_orders %}
+
+        <div class="order-card">
+
+            <!-- TOP SECTION -->
+
+            <div class="order-summary">
+
+                <div>
+                    <strong>Order #{{ order.id }}</strong><br>
+                    {{ order.customer.name }}
+                </div>
+
+                <div>
+                    <strong>₦{{ "{:,.0f}".format(order.total_amount) }}</strong>
+                </div>
+
+                <button
+                    type="button"
+                    onclick="toggleOrder({{ order.id }})">
+                    View Order
+                </button>
+
+            </div>
+
+            <!-- EXPANDABLE SECTION -->
+
+            <div
+                id="details-{{ order.id }}"
+                class="order-details"
+                style="display:none;"
+            >
+
+                <table class="app-table">
+
+                    <tr>
+                        <th>Food</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                    </tr>
+
+                    {% for item in order.items %}
+
+                    <tr>
+                        <td>{{ item.food.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>₦{{ "{:,.0f}".format(item.subtotal) }}</td>
+                    </tr>
+
+                    {% endfor %}
+
+                </table>
+
+                <form
+                    method="POST"
+                    action="{{ url_for('take_order', order_id=order.id) }}"
+                >
+                    <button type="submit" class="login-btn">
+                        Take Order
+                    </button>
+                </form>
+
+            </div>
+
         </div>
-    </main>
 
-    {% for item in menu_items %}
-    <div class="menu-item">
-        <strong>{{ item.name }}</strong>
-        <span>₦{{ item.price or "Not set" }}</span>
-    </div>
+        {% endfor %}
+
     {% else %}
-    <p>No menu items yet</p>
-    {% endfor %}
+
+        <p>No incoming orders.</p>
+
+    {% endif %}
+
+</div>
+
+<script>
+
+function toggleOrder(orderId){
+
+    let details =
+        document.getElementById(
+            "details-" + orderId
+        );
+
+    if(details.style.display === "none"){
+
+        details.style.display = "block";
+
+    } else {
+
+        details.style.display = "none";
+
+    }
+}
+
+</script>
 
 {% endblock %}

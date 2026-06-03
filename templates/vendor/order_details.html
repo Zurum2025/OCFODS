@@ -1,0 +1,68 @@
+{% extends "vendor/layout.html" %}
+
+{% block vendor_content %}
+
+<h1>Order #{{ order.id }}</h1>
+
+<p>
+    Customer:
+    {{ order.customer.name }}
+</p>
+
+<p>
+    Total:
+    ₦{{ order.total_amount }}
+</p>
+
+<p>
+    Distance:
+    {{ order.delivery_distance_km }} km
+</p>
+
+<hr>
+
+<h3>Ordered Items</h3>
+
+<table class="app-table">
+
+    <tr>
+        <th>Food</th>
+        <th>Quantity</th>
+        <th>Subtotal</th>
+    </tr>
+
+    {% for item in order.items %}
+
+    <tr>
+
+        <td>
+            {{ item.food.name }}
+        </td>
+
+        <td>
+            {{ item.quantity }}
+        </td>
+
+        <td>
+            ₦{{ item.subtotal }}
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% if order.status == "paid" %}
+
+<a
+    class="login-btn"
+    href="{{ url_for('take_order',
+                     order_id=order.id) }}"
+>
+    Take Order
+</a>
+
+{% endif %}
+
+{% endblock %}

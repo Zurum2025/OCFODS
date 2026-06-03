@@ -375,10 +375,22 @@ def food_setup():
 def vendor_dashboard():
     if current_user.role != "vendor":
         abort(403)
+
+    pending_orders = Order.query.filter_by(
+        vendor_id=current_user.id,
+        status="pending"
+    ).order_by(Order.order_date.desc()).all()
+
+    menu_items = Food.query.filter_by(
+        vendor_id=current_user.id
+    ).all()
+
     return render_template(
         "vendor/vendor_dashboard.html",
-        vendor=current_user
-        )
+        vendor=current_user,
+        pending_orders=pending_orders,
+        menu_items=menu_items
+    )
 
 # Login applies to all users
 @app.route("/login", methods=["GET", "POST"])
@@ -833,14 +845,14 @@ def vendor_orders():
         orders=orders
     )
 
-@app.route("/vendor/order/<int:order_id>/take")
+@app.route("/vendor/order/<int:order_id>/take", methods=["POST"])
 @login_required
 def take_order(order_id):
 
-    order = Order.query.get_or_404(order_id)
-
-    if order.vendor_id != current_user.id:
+    if current_user.role != "vendor":
         abort(403)
+
+    order = Order.query.get_or_404(order_id)
 
     order.status = "accepted"
 
@@ -851,7 +863,23 @@ def take_order(order_id):
         "success"
     )
 
-    return redirect(url_for("vendor_orders"))
+    return redirect(
+        url_for("vendor_dashboard")
+    )
+
+@app.route("/vendor/order/<int:order_id>")
+@login_required
+def vendor_order_details(order_id):
+
+    order = Order.query.get_or_404(order_id)
+
+    if order.vendor_id != current_user.id:
+        abort(403)
+
+    return render_template(
+        "vendor/order_details.html",
+        order=order
+    )
 
 @app.route("/vendor/settings", methods=["GET", "POST"])
 @login_required
