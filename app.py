@@ -835,11 +835,13 @@ def vendor_menu():
 def vendor_orders():
     user = require_vendor()
 
-    orders = Order.query.filter_by(
-        vendor_id=user.id,
-        status="accepted"
-    ).order_by(Order.order_date.desc()).all()
-
+    orders = Order.query.filter(
+        Order.vendor_id == user.id,
+        Order.status.in_(["accepted", "ready", "delivered"])
+    ).order_by(
+        Order.order_date.desc()
+    ).all()
+    
     return render_template(
         "vendor/vendor_orders.html",
         vendor=user,
@@ -881,6 +883,50 @@ def vendor_order_details(order_id):
         "vendor/order_details.html",
         vendor = current_user,
         order=order
+    )
+
+@app.route("/vendor/order/<int:order_id>/ready", methods=["POST"])
+@login_required
+def mark_ready(order_id):
+
+    if current_user.role != "vendor":
+        abort(403)
+
+    order = Order.query.get_or_404(order_id)
+
+    order.status = "ready"
+
+    db.session.commit()
+
+    flash(
+        f"Order #{order.id} marked as ready",
+        "success"
+    )
+
+    return redirect(
+        url_for("vendor_orders")
+    )
+
+@app.route("/vendor/order/<int:order_id>/delivered", methods=["POST"])
+@login_required
+def mark_delivered(order_id):
+
+    if current_user.role != "vendor":
+        abort(403)
+
+    order = Order.query.get_or_404(order_id)
+
+    order.status = "delivered"
+
+    db.session.commit()
+
+    flash(
+        f"Order #{order.id} delivered successfully",
+        "success"
+    )
+
+    return redirect(
+        url_for("vendor_orders")
     )
 
 @app.route("/vendor/settings", methods=["GET", "POST"])

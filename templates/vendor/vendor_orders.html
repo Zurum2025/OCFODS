@@ -16,6 +16,7 @@
         <th>Distance</th>
         <th>Status</th>
         <th>Details</th>
+        <th>Actions</th>
     </tr>
 
     {% for order in orders %}
@@ -41,7 +42,24 @@
         </td>
 
         <td>
-            {{ order.status }}
+
+            {% if order.status == "accepted" %}
+                <span class="status-badge status-accepted">
+                    Accepted
+                </span>
+            
+            {% elif order.status == "ready" %}
+                <span class="status-badge status-ready">
+                    Ready
+                </span>
+            
+            {% elif order.status == "delivered" %}
+                <span class="status-badge status-delivered">
+                    Delivered
+                </span>
+            
+            {% endif %}
+            
         </td>
         
         <td>
@@ -49,6 +67,40 @@
                     order_id=order.id) }}">
                 View Details
             </a>
+        </td>
+
+        <td>
+
+            {% if order.status == "accepted" %}
+            
+            <form method="POST"
+                  action="{{ url_for('mark_ready',
+                  order_id=order.id) }}">
+            
+                <button class="ready-btn">
+                    Mark Ready
+                </button>
+            
+            </form>
+            
+            {% elif order.status == "ready" %}
+            
+            <form method="POST"
+                  action="{{ url_for('mark_delivered',
+                  order_id=order.id) }}">
+            
+                <button class="deliver-btn">
+                    Mark Delivered
+                </button>
+            
+            </form>
+            
+            {% else %}
+            
+            Completed
+            
+            {% endif %}
+            
         </td>
 
     </tr>
