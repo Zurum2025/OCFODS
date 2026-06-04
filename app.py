@@ -836,7 +836,8 @@ def vendor_orders():
     user = require_vendor()
 
     orders = Order.query.filter_by(
-        vendor_id=user.id
+        vendor_id=user.id,
+        status="accepted"
     ).order_by(Order.order_date.desc()).all()
 
     return render_template(
@@ -878,6 +879,7 @@ def vendor_order_details(order_id):
 
     return render_template(
         "vendor/order_details.html",
+        vendor = current_user,
         order=order
     )
 

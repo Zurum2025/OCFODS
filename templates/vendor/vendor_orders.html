@@ -15,7 +15,7 @@
         <th>Total</th>
         <th>Distance</th>
         <th>Status</th>
-        <th>Action</th>
+        <th>Details</th>
     </tr>
 
     {% for order in orders %}
@@ -43,29 +43,12 @@
         <td>
             {{ order.status }}
         </td>
-
+        
         <td>
-
-            {% if order.status == "paid" %}
-
-            <a
-                href="{{ url_for('take_order', order_id=order.id) }}"
-                class="login-btn"
-            >
-                Take Order
-            </a>
-
             <a href="{{ url_for('vendor_order_details',
                     order_id=order.id) }}">
                 View Details
             </a>
-            
-            {% else %}
-
-            --
-
-            {% endif %}
-
         </td>
 
     </tr>
