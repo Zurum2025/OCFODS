@@ -561,7 +561,9 @@ def place_order():
         foods=foods,
         subtotal=subtotal,
         transportation_fee=transportation_fee,
-        total=total
+        total=total,
+        customer_latitude=customer_latitude,
+        customer_longitude=customer_longitude,
     )
 
 @app.route("/order/confirm", methods=["POST"])
@@ -581,8 +583,8 @@ def confirm_order():
 
     subtotal = sum(food.price for food in foods)
 
-    customer_latitude = request.form.get("customer_latitude")
-    customer_longitude = request.form.get("customer_longitude")
+    customer_latitude = float(request.form.get("customer_latitude"))
+    customer_longitude = float(request.form.get("customer_longitude"))
 
     #vendor coordinates
     vendor_coords = (vendor.latitude, vendor.longitude)

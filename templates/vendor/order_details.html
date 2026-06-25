@@ -74,6 +74,9 @@
     const customerLat = {{ order.customer_latitude or 0 }};
     const customerLng = {{ order.customer_longitude or 0 }};
     
+    console.log("Vendor:", vendorLat, vendorLng);
+    console.log("Customer:", customerLat, customerLng);
+    
     const map = L.map('map').setView(
         [customerLat, customerLng],
         13

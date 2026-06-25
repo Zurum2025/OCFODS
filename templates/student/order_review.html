@@ -28,6 +28,8 @@
 <form method="POST" action="{{ url_for('confirm_order') }}" class = "order-review">
     {% for food in foods %}
         <input type="hidden" name="food_ids" value="{{ food.id }}">
+        <input type="hidden" name="customer_latitude" value="{{ customer_latitude }}">
+        <input type="hidden" name="customer_longitude" value="{{ customer_longitude }}">
     {% endfor %}
 
     <button type="submit">Proceed to Payment</button>
