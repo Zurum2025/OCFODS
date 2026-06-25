@@ -112,4 +112,33 @@ function toggleOrder(orderId){
 
 </script>
 
+{% block vendor_scripts %}
+<script>
+    const socket = io({
+    transports: ["polling"]
+});
+
+    socket.on("connect", function() {
+        console.log("SOCKET CONNECTED");
+});
+
+    socket.on("disconnect", function() {
+        console.log("SOCKET DISCONNECTED");
+});
+    
+    socket.on("new_order", function(data){
+        console.log("NEW ORDER RECEIVED", data);
+
+        alert(
+            "🔔 New Order Received\n\n" +
+            "Order #" + data.order_id +
+            "\nCustomer: " + data.customer +
+            "\nTotal: ₦" + data.total
+        );
+    
+        location.reload();
+    
+    });
+    </script>
+    {% endblock %}
 {% endblock %}

@@ -14,10 +14,19 @@ from reportlab.lib import colors
 import requests
 from datetime import datetime
 from geopy.distance import geodesic
+from flask_socketio import SocketIO, emit
 
 
 
 app = Flask(__name__)
+
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    async_mode="threading",
+    logger=True,
+    engineio_logger=True
+    )
 
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 
@@ -48,6 +57,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # =========================
 # HELPERS
 # =========================
+
+@socketio.on("connect")
+def handle_connect():
+    print("VENDOR CONNECTED")
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -378,7 +391,7 @@ def vendor_dashboard():
 
     pending_orders = Order.query.filter_by(
         vendor_id=current_user.id,
-        status="pending"
+        status="paid"
     ).order_by(Order.order_date.desc()).all()
 
     menu_items = Food.query.filter_by(
@@ -803,6 +816,17 @@ def verify_payment(reference=None):
         order.receipt_file = receipt_file
         db.session.commit()
 
+        print("=======EMITTING NEW ORDER=======")
+        print(order.id)
+        socketio.emit(
+        "new_order",
+        {
+            "order_id": order.id,
+            "customer": order.customer.name,
+            "total": order.total_amount
+        }
+    )
+
     flash("Payment successful!", "success")
     return redirect(url_for("studash", rate_order=order.id))
 
@@ -1086,7 +1110,7 @@ def admin_delete_user(user_id):
 
     user = User.query.get_or_404(user_id)
 
-    # Prevent deleting another admin (or yourself)
+    # Prevent deleting admin 
     if user.role == "admin":
         flash("You cannot delete an admin account", "danger")
         return redirect(url_for("admin_users"))
@@ -1159,4 +1183,7 @@ def require_admin():
     return current_user
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(
+        app,
+        debug=True
+    )

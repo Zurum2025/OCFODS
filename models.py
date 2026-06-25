@@ -53,7 +53,7 @@ class Order(db.Model):
     status = db.Column(db.String(30), default="pending")
     total_amount = db.Column(db.Float, default=0)
     receipt_file = db.Column(db.String(255))
-    transaction_ref = db.column(db.String(100))
+    transaction_ref = db.Column(db.String(100))
     
     customer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     vendor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)

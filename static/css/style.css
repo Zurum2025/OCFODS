@@ -1424,3 +1424,10 @@ textarea {
     border-radius:8px;
     cursor:pointer;
 }
+
+.map{
+    width:100%;
+    height:500px;
+    border-radius:12px;
+    margin-top:20px;
+}

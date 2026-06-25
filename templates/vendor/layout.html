@@ -29,4 +29,10 @@
     </main>
     
 </div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+{% block vendor_scripts %}{% endblock %}
+<script>
+    console.log("IO TYPE =", typeof io);
+</script>
 {% endblock %}

@@ -2,6 +2,15 @@
 
 {% block vendor_content %}
 
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
+
+<script
+    src="https://unpkg.com/leaflet/dist/leaflet.js">
+</script>
+
 <h1>Order #{{ order.id }}</h1>
 
 <p>
@@ -53,16 +62,46 @@
 
 </table>
 
-{% if order.status == "paid" %}
+<br>
 
-<a
-    class="login-btn"
-    href="{{ url_for('take_order',
-                     order_id=order.id) }}"
->
-    Take Order
-</a>
+<div id="map" style="height: 500px; width: 100%;"></div>
 
-{% endif %}
+<script>
 
+    const vendorLat = {{ vendor.latitude or 0}};
+    const vendorLng = {{ vendor.longitude or 0}};
+    
+    const customerLat = {{ order.customer_latitude or 0 }};
+    const customerLng = {{ order.customer_longitude or 0 }};
+    
+    const map = L.map('map').setView(
+        [customerLat, customerLng],
+        13
+    );
+    
+    L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            attribution:
+            '&copy; OpenStreetMap contributors'
+        }
+    ).addTo(map);
+
+    L.marker([vendorLat, vendorLng])
+    .addTo(map)
+    .bindPopup("Vendor");
+
+    L.marker([customerLat, customerLng])
+    .addTo(map)
+    .bindPopup("Customer");
+
+    const bounds = L.latLngBounds([
+    [vendorLat, vendorLng],
+    [customerLat, customerLng]
+    ]);
+
+    map.fitBounds(bounds);
+    
+    </script>
+    
 {% endblock %}
