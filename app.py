@@ -77,6 +77,10 @@ def load_user(user_id):
 def landing_page():
     return render_template("index.html")
 
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
 @app.route("/analytics")
 def analytics():
 
