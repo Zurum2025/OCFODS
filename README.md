@@ -35,9 +35,9 @@ The system combines e-commerce, geolocation services, digital payments, analytic
 
 # Project Overview
 
-CampusEats was developed to solve the challenge of food ordering within campus environments where students need a convenient way to order meals from nearby vendors.
+Seamless was developed to solve the challenge of food ordering within campus environments where students need a convenient way to order meals from nearby vendors.
 
-Unlike traditional restaurant websites, CampusEats supports:
+Unlike traditional restaurant websites, Seamless supports:
 
 * Multiple vendors
 * Dynamic menu management
@@ -565,7 +565,7 @@ Order completed.
 
 # Location System
 
-CampusEats uses browser geolocation.
+Seamless uses browser geolocation.
 
 Vendor Location:
 
@@ -724,7 +724,7 @@ Clone Repository:
 
 git clone <repository-url>
 
-cd campuseats
+cd seamless
 
 ---
 
@@ -852,7 +852,7 @@ This project is provided for educational and research purposes.
 
 Developed as a full-stack location-aware food ordering platform using Flask, SQLAlchemy, Paystack, Geopy, Leaflet.js, and modern web technologies.
 
-CampusEats demonstrates practical implementation of:
+Seamless demonstrates practical implementation of:
 
 * Authentication Systems
 * Payment Processing
