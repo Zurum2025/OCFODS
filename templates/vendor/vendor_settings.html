@@ -73,6 +73,90 @@
 
     </div>
 
+    <hr>
+    <h3>Payout Account</h3>
+
+    <div class="location-box">
+
+        {% if current_user.account_verified %}
+            <p>
+                ✅ Verified: <strong>{{ current_user.account_name }}</strong>
+                ({{ current_user.bank_name }})
+            </p>
+        {% else %}
+            <p>⚠️ No verified payout account yet. You won't receive split payments until this is set up.</p>
+        {% endif %}
+
+        <label>Bank</label>
+        <select name="bank_code" id="bank_code" onchange="updateBankName()">
+            <option value="">Select bank</option>
+            {% for bank in banks %}
+            <option value="{{ bank.code }}"
+                data-name="{{ bank.name }}"
+                {% if bank.code == current_user.bank_code %}selected{% endif %}>
+                {{ bank.name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <input type="hidden" name="bank_name" id="bank_name" value="{{ current_user.bank_name or '' }}">
+
+        <label>Account Number</label>
+        <input
+            type="text"
+            name="account_number"
+            id="account_number"
+            maxlength="10"
+            value="{{ current_user.account_number if current_user.account_number != '0000' else '' }}"
+            placeholder="10-digit account number"
+        >
+
+        <button type="button" class="login-btn" onclick="verifyAccount()">
+            Verify Account
+        </button>
+
+        <p id="account-verify-status"></p>
+
+    </div>
+
+    <script>
+    function updateBankName() {
+        const select = document.getElementById("bank_code");
+        const opt = select.options[select.selectedIndex];
+        document.getElementById("bank_name").value = opt.getAttribute("data-name") || "";
+    }
+
+    async function verifyAccount() {
+        const accountNumber = document.getElementById("account_number").value;
+        const bankCode = document.getElementById("bank_code").value;
+        const status = document.getElementById("account-verify-status");
+
+        if (!accountNumber || !bankCode) {
+            status.innerHTML = "Please select a bank and enter an account number.";
+            return;
+        }
+
+        status.innerHTML = "Verifying...";
+
+        const formData = new FormData();
+        formData.append("account_number", accountNumber);
+        formData.append("bank_code", bankCode);
+
+        const res = await fetch("{{ url_for('verify_account_endpoint') }}", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.valid) {
+            status.innerHTML = "✅ " + data.account_name + " — looks good, now save changes.";
+        } else {
+            status.innerHTML = "❌ " + (data.message || "Verification failed");
+        }
+    }
+    </script>
+
     <br>
 
     <button class ="login-btn" type="submit">save changes</button>

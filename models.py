@@ -30,6 +30,14 @@ class User(UserMixin, db.Model):
     delivery_fee_km = db.Column(db.Float, default = 200)
     is_active= db.Column(db.Boolean, default = True)
 
+    # Vendor payout fields
+    bank_name = db.Column(db.String(100))
+    bank_code = db.Column(db.String(20))
+    account_number = db.Column(db.String(50), default = "0000")
+    account_name = db.Column(db.String(150), default = "Vendor")
+    account_verified = db.Column(db.Boolean, default=False)
+    subaccount_code = db.Column(db.String(100))
+
 class Food(db.Model):
     __tablename__ = "foods"
 
@@ -101,6 +109,10 @@ class Payment(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), unique=True)
 
     order = db.relationship("Order", backref="payment")
+
+    vendor_amount = db.Column(db.Float, default=0)
+    platform_amount = db.Column(db.Float, default=0)
+    subaccount_code = db.Column(db.String(100))
 
 
 

@@ -54,6 +54,60 @@ db.init_app(app)
 migrate = Migrate(app, db)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+PLATFORM_COMMISSION_PERCENT = 5  # platform keeps 5% of food subtotal, vendor gets the rest
+
+PAYSTACK_BASE = "https://api.paystack.co"
+
+def paystack_headers():
+    return {
+        "Authorization": f"Bearer {app.config['PAYSTACK_SECRET_KEY']}",
+        "Content-Type": "application/json"
+    }
+
+def list_banks():
+    resp = requests.get(f"{PAYSTACK_BASE}/bank?country=nigeria", headers=paystack_headers())
+    data = resp.json()
+    if data.get("status"):
+        return data["data"]
+    return []
+
+def verify_bank_account(account_number, bank_code):
+    """Returns (True, account_name) if valid, else (False, error_message)"""
+    resp = requests.get(
+        f"{PAYSTACK_BASE}/bank/resolve",
+        params={"account_number": account_number, "bank_code": bank_code},
+        headers=paystack_headers()
+    )
+    data = resp.json()
+    if data.get("status"):
+        return True, data["data"]["account_name"]
+    return False, data.get("message", "Could not verify account")
+
+def create_or_update_subaccount(vendor, account_name):
+    """Creates a Paystack subaccount for the vendor, or updates it if one exists."""
+    payload = {
+        "business_name": vendor.business_name,
+        "settlement_bank": vendor.bank_code,
+        "account_number": vendor.account_number,
+        "percentage_charge": PLATFORM_COMMISSION_PERCENT
+    }
+
+    if vendor.subaccount_code:
+        resp = requests.put(
+            f"{PAYSTACK_BASE}/subaccount/{vendor.subaccount_code}",
+            json=payload, headers=paystack_headers()
+        )
+    else:
+        resp = requests.post(
+            f"{PAYSTACK_BASE}/subaccount",
+            json=payload, headers=paystack_headers()
+        )
+
+    data = resp.json()
+    if data.get("status"):
+        return data["data"]["subaccount_code"]
+    return None
+
 # =========================
 # HELPERS
 # =========================
@@ -295,25 +349,61 @@ def vendor_reg():
             filename = secure_filename(logo.filename)
             logo_filename = f"{email}_{filename}"
             logo.save(os.path.join(app.config["UPLOAD_FOLDER"], logo_filename))
+        
+        # ── bank details ──────────────────────────────────────────
+        account_number   = request.form.get("account_number", "0000").strip()
+        bank_code        = request.form.get("bank_code", "").strip()
+        bank_name        = request.form.get("bank_name", "").strip()
+        account_verified = False
+        account_name     = None
+        subaccount_code  = None
 
+        if account_number and bank_code and account_number != "0000" and len(account_number) == 10:
+            valid, result = verify_bank_account(account_number, bank_code)
+            if valid:
+                account_verified = True
+                account_name     = result
+            else:
+                # Non-fatal: vendor can fix later in settings
+                flash(f"Bank account could not be verified ({result}). You can update it in Settings.", "warning")
+                account_number = "0000"   # reset to sentinel so settings shows the prompt
+        # ─────────────────────────────────────────────────────────
         vendor = User(
             role="vendor",
             business_name=business_name,
             email=email,
             password=password_hash,
-            logo=logo_filename
+            logo=logo_filename,
+            # bank fields (None / defaults when not provided / not verified)
+            bank_code        = bank_code or None,
+            bank_name        = bank_name or None,
+            account_number   = account_number,
+            account_name     = account_name,
+            account_verified = account_verified
         )
 
         
 
         db.session.add(vendor)
+        db.session.flush()   # gives vendor.id for subaccount creation
+
+        if account_verified:
+            code = create_or_update_subaccount(vendor, account_name)
+            if code:
+                vendor.subaccount_code = code
+            else:
+                flash("Account verified but Paystack payout setup failed. Update it in Settings.", "warning")
+
         db.session.commit()
         
         login_user(vendor) 
         
         return redirect(url_for("food_setup"))
+    
+    # GET - Fetch bank list so the dropdown is populated
+    banks = list_banks()
 
-    return render_template("vendor_reg.html")
+    return render_template("vendor_reg.html", banks=banks)
 
 # Vendor food setup
 @app.route("/vendor/food_setup", methods=["GET", "POST"])
@@ -402,11 +492,27 @@ def vendor_dashboard():
         vendor_id=current_user.id
     ).all()
 
+    total_earned = db.session.query(
+        func.sum(Payment.vendor_amount)
+    ).join(Order).filter(
+        Order.vendor_id == current_user.id,
+        Payment.payment_status == "successful"
+    ).scalar() or 0
+
+    completed_payouts = db.session.query(
+        func.count(Payment.id)
+    ).join(Order).filter(
+        Order.vendor_id == current_user.id,
+        Payment.payment_status == "successful"
+    ).scalar() or 0
+
     return render_template(
         "vendor/vendor_dashboard.html",
         vendor=current_user,
         pending_orders=pending_orders,
-        menu_items=menu_items
+        menu_items=menu_items,
+        total_earned=total_earned,
+        completed_payouts=completed_payouts
     )
 
 # Login applies to all users
@@ -646,6 +752,10 @@ def payment_page(order_id):
 def initiate_payment(order_id):
     order = Order.query.get_or_404(order_id)
 
+    if not order.vendor.subaccount_code:
+        flash("This vendor hasn't set up a payout account yet. Please contact support.", "danger")
+        return redirect(url_for("studash"))
+
     # defing callback and test
     url = "https://api.paystack.co/transaction/initialize"
     
@@ -659,6 +769,7 @@ def initiate_payment(order_id):
         "amount": int(order.total_amount * 100),
         "reference": f"ORD_{order.id}_{int(datetime.now().timestamp())}", 
         "callback_url": url_for("verify_payment", _external=True),
+        "bearer": "subaccount",
         "metadata": {
             "order_id": str(order.id), 
             "user_id": str(current_user.id)
@@ -815,7 +926,23 @@ def verify_payment(reference=None):
 
     if order.status != "paid":
         order.status = "paid"
-        payment = Payment(order_id=order.id, payment_method="paystack", payment_status="successful")
+        # Paystack returns the split breakdown in data["fees_split"] when a subaccount was used
+        fees_split = data.get("fees_split") or {}
+        vendor_amount = fees_split.get("subaccount", 0) / 100 if fees_split else 0
+        platform_amount = order.total_amount - vendor_amount    
+        
+        if not vendor_amount:
+            vendor_amount = order.total_amount * (1 - PLATFORM_COMMISSION_PERCENT / 100)
+            platform_amount = order.total_amount - vendor_amount
+
+        payment = Payment(
+            order_id=order.id, 
+            payment_method="paystack", 
+            payment_status="successful",
+            vendor_amount=vendor_amount,
+            platform_amount=platform_amount,
+            subaccount_code=order.vendor.subaccount_code
+            )
         db.session.add(payment)
         
         receipt_file = generate_receipt(order)
@@ -993,15 +1120,58 @@ def vendor_settings():
         if address:
             current_user.address = address
 
+        account_number = request.form.get("account_number")
+        bank_code = request.form.get("bank_code")
+        bank_name = request.form.get("bank_name")
+
+        if account_number and bank_code and account_number != "0000":
+            valid, result = verify_bank_account(account_number, bank_code)
+
+            if not valid:
+                flash(f"Invalid account number: {result}", "danger")
+                return redirect(url_for("vendor_settings"))
+            
+            current_user.account_number = account_number
+            current_user.bank_code = bank_code
+            current_user.bank_name = bank_name
+            current_user.account_name = result
+            current_user.account_verified = True
+
+            subaccount_code = create_or_update_subaccount(current_user, result)
+            if subaccount_code:
+                current_user.subaccount_code = subaccount_code
+            else:
+                flash("Account verified but payout setup with Paystack failed. Try again.", "warning")
+
         db.session.commit()
-        flash("Menu updated successfully", "success")
+        flash("Settings updated successfully", "success")
         return redirect(url_for("vendor_settings"))
+    
+    banks = list_banks()
 
     return render_template("vendor/vendor_settings.html", 
                            vendor=current_user,
-                           foods = foods
+                           foods = foods,
+                           banks=banks
                            )
 
+@app.route("/vendor/verify_account", methods=["POST"])
+@login_required
+def verify_account_endpoint():
+    if current_user.role != "vendor":
+        abort(403)
+
+    account_number = request.form.get("account_number")
+    bank_code = request.form.get("bank_code")
+
+    if not account_number or account_number == "0000" or len(account_number) != 10:
+        return {"valid": False, "message": "Please enter a valid 10-digit account number"}, 400
+
+    valid, result = verify_bank_account(account_number, bank_code)
+
+    if valid:
+        return {"valid": True, "account_name": result}
+    return {"valid": False, "message": result}, 400
 # =========================
 # ADMIN ROUTES
 # =========================

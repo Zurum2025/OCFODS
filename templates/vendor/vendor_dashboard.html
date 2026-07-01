@@ -7,6 +7,25 @@
     <p>Manage your incoming orders</p>
 </div>
 
+<div class="analytics-grid" style="margin-bottom: 30px;">
+    <div class="analytics-card">
+        <h3>Total Earned</h3>
+        <p>₦{{ "{:,.0f}".format(total_earned) }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Payouts Completed</h3>
+        <p>{{ completed_payouts }}</p>
+    </div>
+    {% if not current_user.account_verified %}
+    <div class="analytics-card" style="border: 2px solid #fbbf24;">
+        <h3>⚠️ Payout Setup Needed</h3>
+        <p style="font-size:14px; font-weight:400;">
+            <a href="{{ url_for('vendor_settings') }}">Add your bank account</a> to start receiving payments.
+        </p>
+    </div>
+    {% endif %}
+</div>
+
 <!-- INCOMING ORDERS -->
 <div class="incoming-orders">
 

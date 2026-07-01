@@ -29,9 +29,107 @@
             <small style="color:#6b7280">
                 Accepted formats: JPG, PNG, WEBP
             </small>
-            
-            <button type ="submit" class="login-btn">Register</button>
+<!------------------------------------------------------------------------------->
+            <!-- ── BANK DETAILS ─────────────────────────────────── -->
+            <hr style="margin: 1.4rem 0;">
+
+            <h3 style="margin-bottom: .8rem; font-size: 1rem; color: #374151;">
+                Payout Account
+            </h3>
+            <p style="font-size:.85rem; color:#6b7280; margin-bottom:1rem;">
+                Add your bank details so you can receive payments directly.
+                You can also do this later in Settings.
+            </p>
+
+            <div class="input-group">
+                <label>Bank</label>
+                <select name="bank_code" id="reg_bank_code"
+                        style="width:100%; padding:.75rem 1rem; border:1.5px solid #d1d5db;
+                               border-radius:8px; font-size:1rem;"
+                        onchange="regUpdateBankName()">
+                    <option value="">Select bank (optional)</option>
+                    {% for bank in banks %}
+                    <option value="{{ bank.code }}" data-name="{{ bank.name }}">
+                        {{ bank.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- hidden carrier for the human-readable bank name -->
+            <input type="hidden" name="bank_name" id="reg_bank_name">
+
+            <div class="input-group">
+                <label>Account Number</label>
+                <input type="text" name="account_number" id="reg_account_number"
+                       maxlength="10" placeholder="10-digit account number">
+            </div>
+
+            <button type="button" class="login-btn"
+                    style="background:#0d6efd; margin-bottom:.5rem;"
+                    onclick="regVerifyAccount()">
+                Verify Account
+            </button>
+
+            <p id="reg_verify_status"
+               style="font-size:.88rem; margin-bottom:1rem; min-height:1.2rem;"></p>
+            <!-- ────────────────────────────────────────────────── -->
+
+            <button type="submit" class="login-btn">Register</button>
         </form>
     </div>
 </section>
-{% endblock %}
+
+<script>
+function regUpdateBankName() {
+    const sel = document.getElementById("reg_bank_code");
+    const opt = sel.options[sel.selectedIndex];
+    document.getElementById("reg_bank_name").value =
+        opt.getAttribute("data-name") || "";
+}
+
+async function regVerifyAccount() {
+    const accountNumber = document.getElementById("reg_account_number").value.trim();
+    const bankCode      = document.getElementById("reg_bank_code").value;
+    const statusEl      = document.getElementById("reg_verify_status");
+
+    if (!bankCode) {
+        statusEl.style.color = "#dc2626";
+        statusEl.textContent = "Please select a bank first.";
+        return;
+    }
+    if (accountNumber.length !== 10) {
+        statusEl.style.color = "#dc2626";
+        statusEl.textContent = "Account number must be exactly 10 digits.";
+        return;
+    }
+
+    statusEl.style.color = "#6b7280";
+    statusEl.textContent = "Verifying…";
+
+    const form = new FormData();
+    form.append("account_number", accountNumber);
+    form.append("bank_code", bankCode);
+
+    try {
+        const res  = await fetch("{{ url_for('verify_account_endpoint') }}", {
+            method: "POST",
+            body:   form
+        });
+        const data = await res.json();
+
+        if (res.ok && data.valid) {
+            statusEl.style.color = "#16a34a";
+            statusEl.textContent = "✅ " + data.account_name;
+        } else {
+            statusEl.style.color = "#dc2626";
+            statusEl.textContent = "❌ " + (data.message || "Verification failed");
+        }
+    } catch {
+        statusEl.style.color = "#dc2626";
+        statusEl.textContent = "Network error. Try again.";
+    }
+}
+</script>
+{% endblock %}            
+<!------------------------------------------------------------------------------->            
