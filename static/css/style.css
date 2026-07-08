@@ -1221,7 +1221,7 @@ textarea {
 /*ANALYTIC DASHBOARD CHARTS*/
 .chart-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(400px,1fr));
+    grid-template-columns:repeat(2 ,minmax(0px,1fr));
     gap:30px;
     margin-top:40px;
 }
@@ -1231,27 +1231,33 @@ textarea {
     padding:25px;
     border-radius:18px;
     box-shadow:0 4px 15px rgba(0,0,0,0.08);
+    min-width: 0;
 }
 
 .chart-header{
     display:flex;
     justify-content:space-between;
     align-items:center;
+    flex-wrap: wrap;
+    row-gap: 10px;
     margin-bottom:20px;
 }
 
 .chart-filters{
     display:flex;
-    gap:10px;
+    flex-wrap: wrap;
+    gap:8px;
 }
 
 .filter-btn{
     border:none;
-    padding:10px 16px;
+    padding:8px 14px;
     border-radius:10px;
     cursor:pointer;
     transition:0.3s ease;
     font-weight:600;
+    font-size: 0.85rem;
+    white-space: nowrap;
 }
 
 .filter-btn:hover{
@@ -1262,6 +1268,12 @@ textarea {
     background:#ff6600;
     color:white;
     box-shadow:0 4px 10px rgba(255,102,0,0.3);
+}
+
+@media (max-width: 900px){
+    .chart-grid{
+        grid-template-columns:1fr;
+    }
 }
 
 /* VENDOR DASHBOARD */

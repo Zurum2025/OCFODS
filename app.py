@@ -12,7 +12,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from geopy.distance import geodesic
 from flask_socketio import SocketIO, emit
 
@@ -135,6 +135,154 @@ def landing_page():
 def about():
     return render_template("about.html")
 
+# =========================
+# ANALYTICS HELPERS
+# =========================
+
+def get_daily_revenue(days=7):
+    """Revenue for each of the last `days` days (including today)."""
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=days - 1)
+
+    rows = db.session.query(
+        func.strftime("%Y-%m-%d", Order.order_date).label("period"),
+        func.sum(Order.total_amount)
+    ).filter(
+        Order.status == "paid",
+        Order.order_date >= datetime.combine(start_date, datetime.min.time())
+    ).group_by("period").all()
+
+    revenue_map = {r[0]: (r[1] or 0) for r in rows}
+
+    labels, values = [], []
+    for i in range(days):
+        d = start_date + timedelta(days=i)
+        labels.append(d.strftime("%a %d"))
+        values.append(revenue_map.get(d.strftime("%Y-%m-%d"), 0))
+
+    return labels, values
+
+
+def get_weekly_revenue(weeks=4):
+    """Revenue for each of the last `weeks` weeks (Mon–Sun buckets)."""
+    today = datetime.now().date()
+    this_week_start = today - timedelta(days=today.weekday())
+    range_start = this_week_start - timedelta(weeks=weeks - 1)
+
+    rows = db.session.query(
+        Order.order_date,
+        Order.total_amount
+    ).filter(
+        Order.status == "paid",
+        Order.order_date >= datetime.combine(range_start, datetime.min.time())
+    ).all()
+
+    buckets = [0] * weeks
+    labels = [
+        (range_start + timedelta(weeks=i)).strftime("%b %d")
+        for i in range(weeks)
+    ]
+
+    for order_date, amount in rows:
+        delta_days = (order_date.date() - range_start).days
+        index = delta_days // 7
+        if 0 <= index < weeks:
+            buckets[index] += (amount or 0)
+
+    return labels, buckets
+
+
+def get_monthly_revenue(months=12):
+    """Revenue for each of the last `months` months."""
+    today = datetime.now()
+    year, month = today.year, today.month
+
+    year_months = []
+    for _ in range(months):
+        year_months.append((year, month))
+        month -= 1
+        if month == 0:
+            month = 12
+            year -= 1
+    year_months.reverse()
+
+    rows = db.session.query(
+        func.strftime("%Y-%m", Order.order_date).label("period"),
+        func.sum(Order.total_amount)
+    ).filter(
+        Order.status == "paid"
+    ).group_by("period").all()
+
+    revenue_map = {r[0]: (r[1] or 0) for r in rows}
+
+    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    labels, values = [], []
+    for (yr, mo) in year_months:
+        key = f"{yr:04d}-{mo:02d}"
+        labels.append(f"{month_names[mo - 1]} {str(yr)[2:]}")
+        values.append(revenue_map.get(key, 0))
+
+    return labels, values
+
+
+def get_yearly_revenue():
+    """Revenue totals grouped by calendar year."""
+    rows = db.session.query(
+        func.strftime("%Y", Order.order_date).label("period"),
+        func.sum(Order.total_amount)
+    ).filter(
+        Order.status == "paid"
+    ).group_by("period").order_by("period").all()
+
+    if not rows:
+        return [str(datetime.now().year)], [0]
+
+    return [r[0] for r in rows], [r[1] or 0 for r in rows]
+
+
+def get_food_combo_matrix(top_n=8):
+    """
+    Builds a co-occurrence matrix of the most frequently ordered foods —
+    how often pairs of items show up together in the same order.
+    """
+    rows = db.session.query(
+        OrderItem.order_id,
+        Food.name
+    ).join(Food).join(Order).filter(
+        Order.status == "paid"
+    ).all()
+
+    orders_foods = {}
+    for order_id, food_name in rows:
+        orders_foods.setdefault(order_id, set()).add(food_name)
+
+    food_counts = {}
+    for foods in orders_foods.values():
+        for f in foods:
+            food_counts[f] = food_counts.get(f, 0) + 1
+
+    top_foods = sorted(food_counts, key=food_counts.get, reverse=True)[:top_n]
+
+    matrix = {f: {g: 0 for g in top_foods} for f in top_foods}
+
+    for foods in orders_foods.values():
+        relevant = [f for f in foods if f in top_foods]
+        for f1 in relevant:
+            for f2 in relevant:
+                if f1 != f2:
+                    matrix[f1][f2] += 1
+
+    combo_matrix = [[matrix[f1][f2] for f2 in top_foods] for f1 in top_foods]
+
+    return top_foods, combo_matrix
+
+
+# =========================
+# ANALYTICS ROUTE
+# =========================
+
 @app.route("/analytics")
 def analytics():
 
@@ -147,6 +295,9 @@ def analytics():
     ).filter(
         Order.status == "paid"
     ).scalar() or 0
+
+    # AVERAGE ORDER VALUE
+    avg_order_value = (total_revenue / total_orders) if total_orders else 0
 
     # MOST POPULAR VENDOR
     popular_vendor = db.session.query(
@@ -174,92 +325,44 @@ def analytics():
         func.avg(Rating.rating).desc()
     ).first()
 
-    # TOP FOODS
-    top_foods = db.session.query(
-        Food.name,
-        func.count(OrderItem.food_id).label("total")
-    ).join(
-        OrderItem
-    ).group_by(
-        Food.id
-    ).order_by(
-        func.count(OrderItem.food_id).desc()
-    ).limit(5).all()
+    # ==============================================
+    # FOOD ORDER INTELLIGENCE
+    # grouped by Food.name so identically-named items
+    # sold by different vendors merge into one bar
+    # instead of duplicating
+    # ==============================================
 
-    # FOOD CHART DATA
-    food_chart_labels = [food.name for food in top_foods]
-    food_chart_values = [food.total for food in top_foods]
+    def foods_by_category(category_name=None, limit=None):
+        query = db.session.query(
+            Food.name,
+            func.count(OrderItem.food_id).label("total")
+        ).join(
+            OrderItem
+        ).join(
+            Order
+        ).filter(
+            Order.status == "paid"
+        )
 
-    # VENDOR POPULARITY
-    vendor_data = db.session.query(
-        User.business_name,
-        func.count(Order.id)
-    ).join(
-        Order, Order.vendor_id == User.id
-    ).group_by(
-        User.id
-    ).all()
+        if category_name:
+            query = query.join(FoodCategory).filter(
+                FoodCategory.name == category_name
+            )
 
-    vendor_labels = [v[0] for v in vendor_data]
-    vendor_values = [v[1] for v in vendor_data]
-    
-    # GENERAL FOOD ANALYTICS
+        query = query.group_by(Food.name).order_by(
+            func.count(OrderItem.food_id).desc()
+        )
 
-    general_foods = db.session.query(
-        Food.name,
-        func.count(OrderItem.food_id).label("total")
-    ).join(
-        OrderItem
-    ).group_by(
-        Food.id
-    ).order_by(
-        func.count(OrderItem.food_id).desc()
-    ).limit(10).all()
+        if limit:
+            query = query.limit(limit)
 
-    # MAIN DISH ANALYTICS
+        return query.all()
 
-    main_foods = db.session.query(
-        Food.name,
-        func.count(OrderItem.food_id).label("total")
-    ).join(
-        OrderItem
-    ).join(
-        FoodCategory
-    ).filter(
-        FoodCategory.name == "Main Dish"
-    ).group_by(
-        Food.id
-    ).all()
-
-    # TOPPING ANALYTICS
-
-    topping_foods = db.session.query(
-        Food.name,
-        func.count(OrderItem.food_id).label("total")
-    ).join(
-        OrderItem
-    ).join(
-        FoodCategory
-    ).filter(
-        FoodCategory.name == "Topping"
-    ).group_by(
-        Food.id
-    ).all()
-
-    # DRINK ANALYTICS
-
-    drink_foods = db.session.query(
-        Food.name,
-        func.count(OrderItem.food_id).label("total")
-    ).join(
-        OrderItem
-    ).join(
-        FoodCategory
-    ).filter(
-        FoodCategory.name == "Drink"
-    ).group_by(
-        Food.id
-    ).all()
+    general_foods = foods_by_category(limit=10)
+    main_foods = foods_by_category("Main Dish")
+    sauce_foods = foods_by_category("Sauce")
+    topping_foods = foods_by_category("Topping")
+    drink_foods = foods_by_category("Drink")
 
     general_labels = [f.name for f in general_foods]
     general_values = [f.total for f in general_foods]
@@ -267,40 +370,101 @@ def analytics():
     main_labels = [f.name for f in main_foods]
     main_values = [f.total for f in main_foods]
 
+    sauce_labels = [f.name for f in sauce_foods]
+    sauce_values = [f.total for f in sauce_foods]
+
     topping_labels = [f.name for f in topping_foods]
     topping_values = [f.total for f in topping_foods]
 
     drink_labels = [f.name for f in drink_foods]
     drink_values = [f.total for f in drink_foods]
 
+    # ==============================================
+    # VENDOR POPULARITY (by orders + by rating)
+    # ==============================================
+
+    vendor_order_data = db.session.query(
+        User.business_name,
+        func.count(Order.id)
+    ).join(
+        Order, Order.vendor_id == User.id
+    ).filter(
+        Order.status == "paid"
+    ).group_by(
+        User.id
+    ).order_by(
+        func.count(Order.id).desc()
+    ).all()
+
+    vendor_labels = [v[0] for v in vendor_order_data]
+    vendor_values = [v[1] for v in vendor_order_data]
+
+    vendor_rating_data = db.session.query(
+        User.business_name,
+        func.avg(Rating.rating)
+    ).join(
+        Rating, Rating.vendor_id == User.id
+    ).group_by(
+        User.id
+    ).order_by(
+        func.avg(Rating.rating).desc()
+    ).all()
+
+    vendor_rating_labels = [v[0] for v in vendor_rating_data]
+    vendor_rating_values = [round(v[1], 1) for v in vendor_rating_data]
+
+    # ==============================================
+    # REVENUE TRENDS
+    # ==============================================
+
+    daily_labels, daily_values = get_daily_revenue(7)
+    weekly_labels, weekly_values = get_weekly_revenue(4)
+    monthly_labels, monthly_values = get_monthly_revenue(12)
+    yearly_labels, yearly_values = get_yearly_revenue()
+
+    # ==============================================
+    # FOOD COMBO TRENDS
+    # ==============================================
+
+    combo_labels, combo_matrix = get_food_combo_matrix(top_n=8)
+
     return render_template(
         "analytics.html",
 
         total_orders=total_orders,
         total_revenue=total_revenue,
+        avg_order_value=avg_order_value,
 
         popular_vendor=popular_vendor,
         highest_rated_vendor=highest_rated_vendor,
 
-        food_chart_labels=food_chart_labels,
-        food_chart_values=food_chart_values,
-
-        vendor_labels=vendor_labels,
-        vendor_values=vendor_values,
-
         general_labels=general_labels,
         general_values=general_values,
-
         main_labels=main_labels,
         main_values=main_values,
-
+        sauce_labels=sauce_labels,
+        sauce_values=sauce_values,
         topping_labels=topping_labels,
         topping_values=topping_values,
-
         drink_labels=drink_labels,
         drink_values=drink_values,
 
-        top_foods=top_foods
+        vendor_labels=vendor_labels,
+        vendor_values=vendor_values,
+        vendor_rating_labels=vendor_rating_labels,
+        vendor_rating_values=vendor_rating_values,
+
+        daily_labels=daily_labels,
+        daily_values=daily_values,
+        weekly_labels=weekly_labels,
+        weekly_values=weekly_values,
+        monthly_labels=monthly_labels,
+        monthly_values=monthly_values,
+        yearly_labels=yearly_labels,
+        yearly_values=yearly_values,
+
+        combo_labels=combo_labels,
+        combo_matrix=combo_matrix,
     )
 
 # Student Registration

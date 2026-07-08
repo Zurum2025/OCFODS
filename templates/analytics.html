@@ -4,134 +4,286 @@
 
 {% block content %}
 
+<style>
+/* ============================
+   ANALYTICS PAGE — MODERN LOOK
+   ============================ */
+
+.analytics-page { max-width: 1300px; margin: 0 auto; padding: 20px; }
+
+.analytics-header { margin-bottom: 10px; }
+.analytics-header h1 {
+    font-size: 2.1rem;
+    color: #0f172a;
+}
+.analytics-subtitle {
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+
+.analytics-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.analytics-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+}
+.analytics-icon { font-size: 1.5rem; margin-bottom: 6px; }
+.analytics-card-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 2px 0;
+}
+.analytics-card small { color: #6b7280; font-size: 0.85rem; }
+
+.chart-card {
+    transition: box-shadow 0.25s ease;
+}
+.chart-card:hover { box-shadow: 0 10px 26px rgba(0,0,0,0.1); }
+
+.chart-card-wide { grid-column: 1 / -1; }
+
+.chart-canvas-wrapper { position: relative; height: 320px; }
+
+.combo-subtitle { color: #6b7280; font-size: 0.9rem; margin-top: -6px; margin-bottom: 4px; }
+
+/* Vendor donut layout */
+.donut-layout {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+}
+.donut-canvas-wrapper {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    flex-shrink: 0;
+}
+.donut-canvas-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+.donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 170px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.legend-label { flex: 1; color: #374151; }
+.legend-value { font-weight: 700; color: #111827; }
+
+/* Heatmap */
+.heatmap-scroll { overflow-x: auto; margin-top: 18px; padding-bottom: 6px; }
+.heatmap-grid { display: grid; gap: 4px; align-items: center; width: max-content; }
+.heatmap-col-label, .heatmap-row-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6b7280;
+    padding: 4px;
+    white-space: nowrap;
+}
+.heatmap-col-label { text-align: center; }
+.heatmap-row-label { text-align: right; padding-right: 10px; }
+.heatmap-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    min-width: 42px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: rgba(249,115,22,0.06);
+    transition: transform 0.15s ease;
+    cursor: default;
+}
+.heatmap-cell:hover { transform: scale(1.1); }
+
+@media (max-width: 640px) {
+    .donut-layout { flex-direction: column; }
+}
+</style>
+
 <div class="analytics-page">
 
-    <h1>Order Intelligence</h1>
+    <div class="analytics-header">
+        <h1>Order Intelligence</h1>
+        <p class="analytics-subtitle">Real-time insight into orders, revenue, and vendor performance</p>
+    </div>
 
     <div class="analytics-grid">
 
         <div class="analytics-card">
+            <div class="analytics-icon">📦</div>
             <h3>Total Orders</h3>
             <p>{{ total_orders }}</p>
         </div>
 
         <div class="analytics-card">
+            <div class="analytics-icon">💰</div>
             <h3>Total Revenue</h3>
-            <p>₦{{ total_revenue }}</p>
+            <p>₦{{ "{:,.0f}".format(total_revenue) }}</p>
         </div>
 
         <div class="analytics-card">
+            <div class="analytics-icon">📊</div>
+            <h3>Avg. Order Value</h3>
+            <p>₦{{ "{:,.0f}".format(avg_order_value) }}</p>
+        </div>
+
+        <div class="analytics-card">
+            <div class="analytics-icon">🏆</div>
             <h3>Most Popular Vendor</h3>
-
             {% if popular_vendor %}
-                <p>{{ popular_vendor.business_name }}</p>
-                <small>
-                    {{ popular_vendor.total_orders }} orders
-                </small>
+                <p class="analytics-card-name">{{ popular_vendor.business_name }}</p>
+                <small>{{ popular_vendor.total_orders }} orders</small>
+            {% else %}
+                <p class="analytics-card-name">—</p>
+                <small>No orders yet</small>
             {% endif %}
         </div>
 
         <div class="analytics-card">
+            <div class="analytics-icon">⭐</div>
             <h3>Highest Rated Vendor</h3>
-
             {% if highest_rated_vendor %}
-                <p>{{ highest_rated_vendor.business_name }}</p>
-
-                <small>
-                    ⭐ {{ highest_rated_vendor.avg_rating|round(1) }}
-                </small>
+                <p class="analytics-card-name">{{ highest_rated_vendor.business_name }}</p>
+                <small>⭐ {{ highest_rated_vendor.avg_rating|round(1) }}</small>
+            {% else %}
+                <p class="analytics-card-name">—</p>
+                <small>No ratings yet</small>
             {% endif %}
         </div>
+
     </div>
-<!--Dashboard-->
+
     <div class="chart-grid">
 
+        <!-- FOOD ORDER INTELLIGENCE -->
         <div class="chart-card">
             <div class="chart-header">
-
                 <h3>Food Order Intelligence</h3>
-        
                 <div class="chart-filters">
-        
-                    <button class="filter-btn active"
-                            onclick="switchFoodChart('general', this)">
-                        General
-                    </button>
-        
-                    <button class="filter-btn"
-                            onclick="switchFoodChart('main', this)">
-                        Main
-                    </button>
-        
-                    <button class="filter-btn"
-                            onclick="switchFoodChart('topping', this)">
-                        Topping
-                    </button>
-        
-                    <button class="filter-btn"
-                            onclick="switchFoodChart('drink', this)">
-                        Drink
-                    </button>
-        
+                    <button class="filter-btn food-filter-btn active" onclick="switchFoodChart('general', this)">General</button>
+                    <button class="filter-btn food-filter-btn" onclick="switchFoodChart('main', this)">Main</button>
+                    <button class="filter-btn food-filter-btn" onclick="switchFoodChart('sauce', this)">Sauce</button>
+                    <button class="filter-btn food-filter-btn" onclick="switchFoodChart('topping', this)">Topping</button>
+                    <button class="filter-btn food-filter-btn" onclick="switchFoodChart('drink', this)">Drink</button>
                 </div>
-        
             </div>
-        
-            <canvas id="foodChart"></canvas>
+            <div class="chart-canvas-wrapper">
+                <canvas id="foodChart"></canvas>
+            </div>
         </div>
 
+        <!-- VENDOR POPULARITY -->
         <div class="chart-card">
-            <h3>Vendor Popularity</h3>
-            <canvas id="vendorChart"></canvas>
+            <div class="chart-header">
+                <h3>Vendor Popularity</h3>
+                <div class="chart-filters">
+                    <button class="filter-btn vendor-filter-btn active" onclick="switchVendorChart('orders', this)">By Orders</button>
+                    <button class="filter-btn vendor-filter-btn" onclick="switchVendorChart('rating', this)">By Rating</button>
+                </div>
+            </div>
+
+            <div class="donut-layout">
+                <div class="donut-canvas-wrapper">
+                    <canvas id="vendorChart"></canvas>
+                </div>
+                <div class="donut-legend" id="vendorLegend"></div>
+            </div>
         </div>
 
-    </div>
-<!--End-->
-    
-
-    <h2>Top Foods</h2>
-
-    <div class="top-foods">
-
-        {% for food in top_foods %}
-
-        <div class="food-card">
-            <h4>{{ food.name }}</h4>
-            <p>Ordered {{ food.total }} times</p>
+        <!-- REVENUE TREND -->
+        <div class="chart-card chart-card-wide">
+            <div class="chart-header">
+                <h3>Revenue Trend</h3>
+                <div class="chart-filters">
+                    <button class="filter-btn revenue-filter-btn active" onclick="switchRevenueChart('daily', this)">Daily</button>
+                    <button class="filter-btn revenue-filter-btn" onclick="switchRevenueChart('weekly', this)">Weekly</button>
+                    <button class="filter-btn revenue-filter-btn" onclick="switchRevenueChart('monthly', this)">Monthly</button>
+                    <button class="filter-btn revenue-filter-btn" onclick="switchRevenueChart('yearly', this)">Yearly</button>
+                </div>
+            </div>
+            <div class="chart-canvas-wrapper">
+                <canvas id="revenueChart"></canvas>
+            </div>
         </div>
 
-        {% endfor %}
+        <!-- FOOD COMBO TRENDS -->
+        <div class="chart-card chart-card-wide">
+            <h3>Food Combo Trends</h3>
+            <p class="combo-subtitle">How often items are ordered together</p>
+
+            {% if combo_labels %}
+            <div class="heatmap-scroll">
+                <div class="heatmap-grid"
+                     style="grid-template-columns: 120px repeat({{ combo_labels|length }}, minmax(48px, 1fr));">
+
+                    <div></div>
+                    {% for label in combo_labels %}
+                        <div class="heatmap-col-label">{{ label }}</div>
+                    {% endfor %}
+
+                    {% for row_label in combo_labels %}
+                        {% set row_index = loop.index0 %}
+                        <div class="heatmap-row-label">{{ row_label }}</div>
+                        {% for value in combo_matrix[row_index] %}
+                            <div class="heatmap-cell"
+                                 data-value="{{ value }}"
+                                 title="{{ row_label }} + {{ combo_labels[loop.index0] }}: {{ value }} order(s)">
+                                {% if value > 0 %}{{ value }}{% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">Not enough order data yet to show combo trends.</div>
+            {% endif %}
+        </div>
 
     </div>
 
 </div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 
 /* =========================
-   TOP FOODS BAR CHART
+   FOOD ORDER INTELLIGENCE
 ========================= */
 
 const foodDatasets = {
-    general: {
-        labels: {{ general_labels|tojson }},
-        values: {{ general_values|tojson }}
-    },
-    main: {
-        labels: {{ main_labels|tojson }},
-        values: {{ main_values|tojson }}
-    },
-    topping: {
-        labels: {{ topping_labels|tojson }},
-        values: {{ topping_values|tojson }}
-    },
-    drink: {
-        labels: {{ drink_labels|tojson }},
-        values: {{ drink_values|tojson }}
-    }
+    general: { labels: {{ general_labels|tojson }}, values: {{ general_values|tojson }} },
+    main:    { labels: {{ main_labels|tojson }},    values: {{ main_values|tojson }} },
+    sauce: { labels: {{ sauce_labels|tojson }},  values: {{ sauce_values|tojson }} },
+    topping: { labels: {{ topping_labels|tojson }}, values: {{ topping_values|tojson }} },
+    drink:   { labels: {{ drink_labels|tojson }},   values: {{ drink_values|tojson }} }
 };
 
 const foodCtx = document.getElementById('foodChart');
@@ -143,55 +295,246 @@ const foodChart = new Chart(foodCtx, {
         datasets: [{
             label: 'Orders',
             data: foodDatasets.general.values,
-            borderWidth: 1
+            backgroundColor: '#f97316',
+            borderRadius: 8,
+            maxBarThickness: 42
         }]
     },
     options: {
         responsive: true,
-        animation: {
-            duration: 1200
+        maintainAspectRatio: false,
+        animation: { duration: 800 },
+        plugins: {
+            legend: { display: false },
+            tooltip: { backgroundColor: '#111827', padding: 10, cornerRadius: 8 }
+        },
+        scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
         }
     }
 });
 
 function switchFoodChart(category, button){
-    foodChart.data.labels =
-        foodDatasets[category].labels;
-
-    foodChart.data.datasets[0].data =
-        foodDatasets[category].values;
-
+    foodChart.data.labels = foodDatasets[category].labels;
+    foodChart.data.datasets[0].data = foodDatasets[category].values;
     foodChart.update();
 
-    document.querySelectorAll(".filter-btn")
-        .forEach(btn => btn.classList.remove("active"));
-
+    document.querySelectorAll(".food-filter-btn").forEach(btn => btn.classList.remove("active"));
     button.classList.add("active");
 }
 
 /* =========================
-   VENDOR PIE CHART
+   VENDOR POPULARITY (DONUT)
 ========================= */
 
-const vendorCtx = document.getElementById('vendorChart');
-
-new Chart(vendorCtx, {
-
-    type: 'pie',
-
-    data: {
-
+const vendorDatasets = {
+    orders: {
         labels: {{ vendor_labels|tojson }},
+        values: {{ vendor_values|tojson }},
+        unit: 'orders'
+    },
+    rating: {
+        labels: {{ vendor_rating_labels|tojson }},
+        values: {{ vendor_rating_values|tojson }},
+        unit: '★ avg'
+    }
+};
 
+const vendorColors = ['#f97316', '#0d6efd', '#22c55e', '#eab308', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e'];
+
+let currentVendorMode = 'orders';
+
+const vendorChart = new Chart(document.getElementById('vendorChart'), {
+    type: 'doughnut',
+    data: {
+        labels: vendorDatasets.orders.labels,
         datasets: [{
-            data: {{ vendor_values|tojson }}
+            data: vendorDatasets.orders.values,
+            backgroundColor: vendorColors,
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverOffset: 8
         }]
     },
-
     options: {
-        responsive: true
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: (ctx) => ` ${ctx.label}: ${ctx.parsed} ${vendorDatasets[currentVendorMode].unit}`
+                }
+            }
+        }
+    },
+    plugins: [{
+        id: 'centerText',
+        afterDraw(chart) { drawVendorCenterText(chart); }
+    }]
+});
+
+function drawVendorCenterText(chart){
+    const data = chart.data.datasets[0].data;
+    if (!data.length) return;
+
+    const { ctx, chartArea: { width, height, left, top } } = chart;
+    const maxIndex = data.indexOf(Math.max(...data));
+    let leaderName = chart.data.labels[maxIndex] || '';
+    if (leaderName.length > 14) leaderName = leaderName.slice(0, 13) + '…';
+    const leaderValue = data[maxIndex];
+    const unit = vendorDatasets[currentVendorMode].unit;
+
+    const centerX = left + width / 2;
+    const centerY = top + height / 2;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.font = '600 11px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText('TOP VENDOR', centerX, centerY - 22);
+
+    ctx.font = '700 16px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#111827';
+    ctx.fillText(leaderName, centerX, centerY);
+
+    ctx.font = '600 13px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#f97316';
+    ctx.fillText(`${leaderValue} ${unit}`, centerX, centerY + 22);
+
+    ctx.restore();
+}
+
+function switchVendorChart(mode, button){
+    currentVendorMode = mode;
+    vendorChart.data.labels = vendorDatasets[mode].labels;
+    vendorChart.data.datasets[0].data = vendorDatasets[mode].values;
+    vendorChart.update();
+    renderVendorLegend(mode);
+
+    document.querySelectorAll(".vendor-filter-btn").forEach(btn => btn.classList.remove("active"));
+    button.classList.add("active");
+}
+
+function renderVendorLegend(mode){
+    const box = document.getElementById('vendorLegend');
+    const { labels, values } = vendorDatasets[mode];
+    box.innerHTML = '';
+
+    if (!labels.length) {
+        box.innerHTML = '<div class="legend-item">No data yet</div>';
+        return;
+    }
+
+    labels.forEach((label, i) => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `
+            <span class="legend-dot" style="background:${vendorColors[i % vendorColors.length]}"></span>
+            <span class="legend-label">${label}</span>
+            <span class="legend-value">${values[i]}</span>
+        `;
+        box.appendChild(item);
+    });
+}
+
+renderVendorLegend('orders');
+
+/* =========================
+   REVENUE TREND
+========================= */
+
+const revenueDatasets = {
+    daily:   { labels: {{ daily_labels|tojson }},   values: {{ daily_values|tojson }} },
+    weekly:  { labels: {{ weekly_labels|tojson }},  values: {{ weekly_values|tojson }} },
+    monthly: { labels: {{ monthly_labels|tojson }}, values: {{ monthly_values|tojson }} },
+    yearly:  { labels: {{ yearly_labels|tojson }},  values: {{ yearly_values|tojson }} }
+};
+
+const revenueCanvas = document.getElementById('revenueChart');
+const revenueGradient = revenueCanvas.getContext('2d').createLinearGradient(0, 0, 0, 320);
+revenueGradient.addColorStop(0, 'rgba(249,115,22,0.35)');
+revenueGradient.addColorStop(1, 'rgba(249,115,22,0)');
+
+const revenueChart = new Chart(revenueCanvas, {
+    type: 'line',
+    data: {
+        labels: revenueDatasets.daily.labels,
+        datasets: [{
+            label: 'Revenue (₦)',
+            data: revenueDatasets.daily.values,
+            borderColor: '#f97316',
+            backgroundColor: revenueGradient,
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointBackgroundColor: '#f97316',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#111827',
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                    label: (ctx) => ` ₦${ctx.parsed.y.toLocaleString()}`
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(0,0,0,0.05)' },
+                ticks: { callback: (v) => '₦' + v.toLocaleString() }
+            },
+            x: { grid: { display: false } }
+        }
     }
 });
+
+function switchRevenueChart(period, button){
+    revenueChart.data.labels = revenueDatasets[period].labels;
+    revenueChart.data.datasets[0].data = revenueDatasets[period].values;
+    revenueChart.update();
+
+    document.querySelectorAll(".revenue-filter-btn").forEach(btn => btn.classList.remove("active"));
+    button.classList.add("active");
+}
+
+/* =========================
+   FOOD COMBO HEATMAP COLORING
+========================= */
+
+(function(){
+    const cells = document.querySelectorAll('.heatmap-cell');
+    if (!cells.length) return;
+
+    let max = 0;
+    cells.forEach(c => {
+        const v = parseInt(c.dataset.value, 10) || 0;
+        if (v > max) max = v;
+    });
+
+    cells.forEach(c => {
+        const v = parseInt(c.dataset.value, 10) || 0;
+        const intensity = max > 0 ? v / max : 0;
+        c.style.background = `rgba(249, 115, 22, ${0.06 + intensity * 0.85})`;
+        c.style.color = intensity > 0.5 ? '#fff' : '#7c2d12';
+    });
+})();
 
 </script>
 {% endblock %}
