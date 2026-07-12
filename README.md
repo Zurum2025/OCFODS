@@ -196,22 +196,8 @@ Technologies:
 
 # Architecture Diagram
 
-**Insert Architecture Diagram Here**
+![System Architechture](static/images/architecture.png)
 
-Suggested Diagram:
-
-[ Client Browser ]
-|
-v
-[ Flask Application ]
-|
-v
-[ SQLAlchemy ORM ]
-|
-v
-[ SQLite Database ]
-
-Additional Components:
 
 * Paystack API
 * OpenStreetMap
@@ -325,23 +311,7 @@ Can:
 
 ## Entity Relationship Diagram
 
-**Insert ER Diagram Here**
-
-Suggested Entities:
-
-User
-
-FoodCategory
-
-Food
-
-Order
-
-OrderItem
-
-Payment
-
-Rating
+![ERD](static/images/erd.png)
 
 ---
 
