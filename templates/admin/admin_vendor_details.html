@@ -1,0 +1,103 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block admin_content %}
+
+<div class="dashboard-header">
+    <h1>{{ vendor.business_name }}</h1>
+    <p>{{ vendor.email }}{% if vendor.phone %} &middot; {{ vendor.phone }}{% endif %}</p>
+</div>
+
+<div class="analytics-grid">
+    <div class="analytics-card">
+        <h3>Total Orders</h3>
+        <p>{{ orders|length }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Menu Items</h3>
+        <p>{{ foods|length }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Average Rating</h3>
+        <p>{% if rating_count > 0 %}⭐ {{ avg_rating|round(1) }}{% else %}—{% endif %}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Total Earned</h3>
+        <p>₦{{ "{:,.0f}".format(total_earned) }}</p>
+    </div>
+</div>
+
+<div class="admin-section">
+    <h2>Payout Account</h2>
+    {% if vendor.account_verified %}
+        <p>✅ {{ vendor.account_name }} — {{ vendor.bank_name }} ({{ vendor.account_number }})</p>
+    {% else %}
+        <p>⚠️ No verified payout account.</p>
+    {% endif %}
+</div>
+
+<div class="admin-section">
+    <h2>Menu</h2>
+    {% if foods %}
+    <table class="app-table">
+        <tr><th>Food</th><th>Category</th><th>Price</th><th>Availability</th></tr>
+        {% for food in foods %}
+        <tr>
+            <td>{{ food.name }}</td>
+            <td>{{ food.category.name }}</td>
+            <td>₦{{ food.price }}</td>
+            <td>
+                {% if food.availability %}
+                    <span class="badge badge-success">Available</span>
+                {% else %}
+                    <span class="badge badge-danger">Unavailable</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p class="empty-state">No menu items yet.</p>
+    {% endif %}
+</div>
+
+<div class="admin-section">
+    <h2>Orders</h2>
+    {% if orders %}
+    <table class="app-table">
+        <tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr>
+        {% for order in orders %}
+        <tr>
+            <td>#{{ order.id }}</td>
+            <td>{{ order.customer.name }}</td>
+            <td>₦{{ "{:,.0f}".format(order.total_amount) }}</td>
+            <td><span class="status-badge status-{{ order.status }}">{{ order.status|capitalize }}</span></td>
+            <td>{{ order.order_date.strftime("%d %b %Y") }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p class="empty-state">No orders yet.</p>
+    {% endif %}
+</div>
+
+<div class="admin-section">
+    <h2>Ratings</h2>
+    {% if ratings %}
+    <ul class="admin-rating-list">
+        {% for rating in ratings %}
+        <li>
+            <strong>⭐ {{ rating.rating }}</strong>
+            {% if rating.comment %} — {{ rating.comment }}{% endif %}
+            <span class="rating-date">{{ rating.created_at.strftime("%d %b %Y") }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty-state">No ratings yet.</p>
+    {% endif %}
+</div>
+
+<br>
+<a href="{{ url_for('admin_vendors') }}" class="btn-view">← Back to Vendors</a>
+
+{% endblock %}

@@ -1,16 +1,62 @@
 {% extends "admin/admin_layout.html" %}
 
 {% block admin_content %}
-<h2>Food Categories</h2>
 
-<form method="POST">
-    <input type="text" name="name" placeholder="Category name" required>
-    <button type="submit">Add Category</button>
+<div class="dashboard-header">
+    <h1>Vendors</h1>
+    <p>{{ vendors|length }} vendor(s) found</p>
+</div>
+
+<form method="GET" class="admin-filter-bar">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search by business name">
+    <button type="submit" class="btn-view">Search</button>
 </form>
 
-<ul>
-{% for cat in categories %}
-    <li>{{ cat.name }}</li>
-{% endfor %}
-</ul>
+{% if vendors %}
+<div class="vendor-grid">
+    {% for vendor in vendors %}
+    <div class="vendor-card">
+        <img src="{{ url_for('static', filename='uploads/vendor_logos/' + vendor.logo) if vendor.logo else url_for('static', filename='images/default_vendor.png') }}"
+             alt="{{ vendor.business_name }}">
+
+        <h4>{{ vendor.business_name }}</h4>
+        <p class="vendor-email">{{ vendor.email }}</p>
+
+        <div class="rating">
+            {% if vendor.rating_count > 0 %}
+                ⭐ {{ vendor.avg_rating|round(1) }} ({{ vendor.rating_count }})
+            {% else %}
+                <span class="no-rating">No ratings yet</span>
+            {% endif %}
+        </div>
+
+        <p>{{ vendor.food_count }} food item(s) &middot; {{ vendor.order_count }} order(s)</p>
+
+        <div class="vendor-badges">
+            {% if vendor.is_active %}
+                <span class="badge badge-success">Active</span>
+            {% else %}
+                <span class="badge badge-danger">Disabled</span>
+            {% endif %}
+
+            {% if vendor.account_verified %}
+                <span class="badge badge-success">Payout Verified</span>
+            {% else %}
+                <span class="badge badge-warning">Payout Pending</span>
+            {% endif %}
+        </div>
+
+        <div class="admin-vendor-actions">
+            <a href="{{ url_for('admin_vendor_details', vendor_id=vendor.id) }}" class="btn-view">View</a>
+            <a href="{{ url_for('admin_toggle_user', user_id=vendor.id) }}" class="btn-warning">
+                {% if vendor.is_active %}Disable{% else %}Enable{% endif %}
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">No vendors found.</p>
+{% endif %}
+
 {% endblock %}
