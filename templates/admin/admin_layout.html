@@ -1,21 +1,46 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="dashboard-wrapper">
+<div class="dashboard-wrapper admin-wrapper">
 
-    <aside class="dashboard-sidebar">
-        <div><h2>Admin Panel</h2></div>
+    <aside class="dashboard-sidebar admin-sidebar">
+        <div class="admin-brand">
+            <h2>⚙️ Admin Panel</h2>
+            {% if admin %}
+            <p class="admin-email">{{ admin.email }}</p>
+            {% endif %}
+        </div>
+
         <nav class="dashboard-nav">
-            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('admin_users') }}">Users</a>
-            <a href="{{ url_for('admin_vendors') }}">Vendors</a>
-            <a href="{{ url_for('admin_foods') }}">Foods</a>
-            <a href="{{ url_for('admin_orders') }}">Orders</a>
-            <a href="{{ url_for('logout') }}">Logout</a>
+            <a href="{{ url_for('admin_dashboard') }}"
+               class="{{ 'active' if request.endpoint == 'admin_dashboard' }}">
+                📊 Dashboard
+            </a>
+            <a href="{{ url_for('admin_users') }}"
+               class="{{ 'active' if request.endpoint == 'admin_users' }}">
+                👥 Users
+            </a>
+            <a href="{{ url_for('admin_vendors') }}"
+               class="{{ 'active' if request.endpoint in ['admin_vendors', 'admin_vendor_details'] }}">
+                🏪 Vendors
+            </a>
+            <a href="{{ url_for('admin_foods') }}"
+               class="{{ 'active' if request.endpoint == 'admin_foods' }}">
+                🍽️ Foods
+            </a>
+            <a href="{{ url_for('admin_categories') }}"
+               class="{{ 'active' if request.endpoint == 'admin_categories' }}">
+                🏷️ Categories
+            </a>
+            <a href="{{ url_for('admin_orders') }}"
+               class="{{ 'active' if request.endpoint in ['admin_orders', 'admin_order_details'] }}">
+                📦 Orders
+            </a>
+            <a href="{{ url_for('logout') }}">🚪 Logout</a>
         </nav>
     </aside>
 
-    <main class="vendor-main">
+    <main class="vendor-main admin-main">
         {% block admin_content %}{% endblock %}
     </main>
 
