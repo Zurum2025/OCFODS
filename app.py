@@ -7,7 +7,7 @@ from models import db, User, Food, Order, FoodCategory, OrderItem, Payment, Rati
 from dotenv import load_dotenv
 from paystackapi.transaction import Transaction
 import os
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
@@ -1336,6 +1336,7 @@ def verify_account_endpoint():
     if valid:
         return {"valid": True, "account_name": result}
     return {"valid": False, "message": result}, 400
+
 # =========================
 # ADMIN ROUTES
 # =========================
@@ -1344,75 +1345,293 @@ def verify_account_endpoint():
 def admin_dashboard():
     admin = require_admin()
 
+    total_revenue = db.session.query(
+        func.sum(Payment.platform_amount)
+    ).filter(Payment.payment_status == "successful").scalar() or 0
+
+    total_transacted = db.session.query(
+        func.sum(Order.total_amount)
+    ).filter(Order.status == "paid").scalar() or 0
+
+    unverified_vendors = User.query.filter_by(
+        role="vendor", account_verified=False
+    ).count()
+
+    recent_orders = Order.query.order_by(
+        Order.order_date.desc()
+    ).limit(8).all()
+
     return render_template(
         "admin/admin_dashboard.html",
         admin=admin,
         user_count=User.query.count(),
+        student_count=User.query.filter_by(role="student").count(),
+        vendor_count=User.query.filter_by(role="vendor").count(),
         food_count=Food.query.count(),
-        order_count=Order.query.count()
+        order_count=Order.query.count(),
+        total_revenue=total_revenue,
+        total_transacted=total_transacted,
+        unverified_vendors=unverified_vendors,
+        recent_orders=recent_orders
     )
+
 
 @app.route("/admin/admin_users")
 def admin_users():
     admin = require_admin()
-    users = User.query.all()
+
+    role = request.args.get("role", "all")
+    q = request.args.get("q", "").strip()
+
+    query = User.query
+
+    if role != "all":
+        query = query.filter_by(role=role)
+
+    if q:
+        like = f"%{q}%"
+        query = query.filter(
+            or_(
+                User.name.ilike(like),
+                User.business_name.ilike(like),
+                User.email.ilike(like)
+            )
+        )
+
+    users = query.order_by(User.id.desc()).all()
 
     return render_template(
         "admin/admin_users.html",
         admin=admin,
-        users=users
+        users=users,
+        role=role,
+        q=q
     )
+
 
 @app.route("/admin/admin_vendors")
 def admin_vendors():
     admin = require_admin()
-    vendors = User.query.filter_by(role="vendor").all()
+
+    q = request.args.get("q", "").strip()
+
+    query = User.query.filter_by(role="vendor")
+
+    if q:
+        query = query.filter(User.business_name.ilike(f"%{q}%"))
+
+    vendors = query.order_by(User.id.desc()).all()
+
+    for vendor in vendors:
+        avg_rating, rating_count = (
+            db.session.query(
+                func.avg(Rating.rating),
+                func.count(Rating.id)
+            )
+            .filter(Rating.vendor_id == vendor.id)
+            .first()
+        )
+        vendor.avg_rating = avg_rating or 0
+        vendor.rating_count = rating_count or 0
+        vendor.order_count = Order.query.filter_by(vendor_id=vendor.id).count()
+        vendor.food_count = Food.query.filter_by(vendor_id=vendor.id).count()
 
     return render_template(
         "admin/admin_vendors.html",
         admin=admin,
-        vendors=vendors
+        vendors=vendors,
+        q=q
     )
+
+
+@app.route("/admin/admin_vendor/<int:vendor_id>")
+def admin_vendor_details(vendor_id):
+    admin = require_admin()
+
+    vendor = User.query.filter_by(id=vendor_id, role="vendor").first_or_404()
+
+    foods = Food.query.filter_by(vendor_id=vendor.id).all()
+    orders = Order.query.filter_by(vendor_id=vendor.id).order_by(
+        Order.order_date.desc()
+    ).all()
+    ratings = Rating.query.filter_by(vendor_id=vendor.id).order_by(
+        Rating.created_at.desc()
+    ).all()
+
+    avg_rating, rating_count = (
+        db.session.query(
+            func.avg(Rating.rating),
+            func.count(Rating.id)
+        )
+        .filter(Rating.vendor_id == vendor.id)
+        .first()
+    )
+
+    total_earned = db.session.query(
+        func.sum(Payment.vendor_amount)
+    ).join(Order).filter(
+        Order.vendor_id == vendor.id,
+        Payment.payment_status == "successful"
+    ).scalar() or 0
+
+    return render_template(
+        "admin/admin_vendor_details.html",
+        admin=admin,
+        vendor=vendor,
+        foods=foods,
+        orders=orders,
+        ratings=ratings,
+        avg_rating=avg_rating or 0,
+        rating_count=rating_count or 0,
+        total_earned=total_earned
+    )
+
+
+@app.route("/admin/admin_categories", methods=["GET", "POST"])
+def admin_categories():
+    admin = require_admin()
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+
+        if name:
+            existing = FoodCategory.query.filter(
+                func.lower(FoodCategory.name) == name.lower()
+            ).first()
+
+            if existing:
+                flash("That category already exists", "warning")
+            else:
+                db.session.add(FoodCategory(name=name))
+                db.session.commit()
+                flash("Category added successfully", "success")
+        else:
+            flash("Category name is required", "danger")
+
+        return redirect(url_for("admin_categories"))
+
+    categories = FoodCategory.query.order_by(FoodCategory.name).all()
+
+    for category in categories:
+        category.food_count = Food.query.filter_by(category_id=category.id).count()
+
+    return render_template(
+        "admin/admin_categories.html",
+        admin=admin,
+        categories=categories
+    )
+
+
+@app.route("/admin/admin_category/<int:category_id>/delete", methods=["POST"])
+def admin_delete_category(category_id):
+    admin = require_admin()
+
+    category = FoodCategory.query.get_or_404(category_id)
+
+    if Food.query.filter_by(category_id=category.id).first():
+        flash("Cannot delete a category that still has foods assigned to it", "danger")
+        return redirect(url_for("admin_categories"))
+
+    db.session.delete(category)
+    db.session.commit()
+
+    flash("Category deleted", "success")
+    return redirect(url_for("admin_categories"))
+
 
 @app.route("/admin/admin_foods")
 def admin_foods():
     admin = require_admin()
-    foods = Food.query.all()
+
+    vendor_id = request.args.get("vendor_id", type=int)
+    category_id = request.args.get("category_id", type=int)
+    q = request.args.get("q", "").strip()
+
+    query = Food.query
+
+    if vendor_id:
+        query = query.filter_by(vendor_id=vendor_id)
+
+    if category_id:
+        query = query.filter_by(category_id=category_id)
+
+    if q:
+        query = query.filter(Food.name.ilike(f"%{q}%"))
+
+    foods = query.order_by(Food.id.desc()).all()
 
     return render_template(
         "admin/admin_foods.html",
         admin=admin,
-        foods=foods
+        foods=foods,
+        vendors=User.query.filter_by(role="vendor").all(),
+        categories=FoodCategory.query.order_by(FoodCategory.name).all(),
+        selected_vendor=vendor_id,
+        selected_category=category_id,
+        q=q
     )
-def seed_categories():
-    categories = ["Main Dish", "Sauce", "Topping", "Drink"]
 
-    for name in categories:
-        if not FoodCategory.query.filter_by(name=name).first():
-            db.session.add(FoodCategory(name=name))
-
-    db.session.commit()
 
 @app.route("/admin/admin_orders")
 def admin_orders():
     admin = require_admin()
-    orders = Order.query.all()
+
+    status = request.args.get("status", "all")
+    q = request.args.get("q", "").strip()
+
+    query = Order.query
+
+    if status != "all":
+        query = query.filter_by(status=status)
+
+    if q:
+        query = query.join(User, Order.customer_id == User.id).filter(
+            User.name.ilike(f"%{q}%")
+        )
+
+    orders = query.order_by(Order.order_date.desc()).all()
 
     return render_template(
         "admin/admin_orders.html",
         admin=admin,
-        orders=orders
+        orders=orders,
+        status=status,
+        q=q
     )
+
+
+@app.route("/admin/admin_order/<int:order_id>")
+def admin_order_details(order_id):
+    admin = require_admin()
+
+    order = Order.query.get_or_404(order_id)
+
+    return render_template(
+        "admin/admin_order_details.html",
+        admin=admin,
+        order=order
+    )
+
 
 @app.route("/admin/admin_user/<int:user_id>/toggle")
 def admin_toggle_user(user_id):
     admin = require_admin()
 
     user = User.query.get_or_404(user_id)
+
+    if user.role == "admin":
+        flash("You cannot disable an admin account", "danger")
+        return redirect(request.referrer or url_for("admin_users"))
+
     user.is_active = not user.is_active
     db.session.commit()
 
-    return redirect(url_for("admin_users"))
+    flash(
+        f"{'Enabled' if user.is_active else 'Disabled'} {user.name or user.business_name}",
+        "success"
+    )
+    return redirect(request.referrer or url_for("admin_users"))
+
 
 @app.route("/admin/admin_food/<int:food_id>/delete")
 def admin_delete_food(food_id):
@@ -1422,7 +1641,9 @@ def admin_delete_food(food_id):
     db.session.delete(food)
     db.session.commit()
 
-    return redirect(url_for("admin_foods"))
+    flash("Food item deleted", "success")
+    return redirect(request.referrer or url_for("admin_foods"))
+
 
 @app.route("/admin/admin_food/<int:food_id>/toggle")
 def admin_toggle_food(food_id):
@@ -1432,7 +1653,12 @@ def admin_toggle_food(food_id):
     food.availability = not food.availability
     db.session.commit()
 
-    return redirect(url_for("admin_foods"))
+    flash(
+        f"{'Marked available' if food.availability else 'Marked unavailable'}: {food.name}",
+        "success"
+    )
+    return redirect(request.referrer or url_for("admin_foods"))
+
 
 @app.route("/admin/admin_order/<int:order_id>/status", methods=["POST"])
 def admin_update_order_status(order_id):
@@ -1442,7 +1668,9 @@ def admin_update_order_status(order_id):
     order.status = request.form["status"]
     db.session.commit()
 
-    return redirect(url_for("admin_orders"))
+    flash(f"Order #{order.id} status updated to {order.status}", "success")
+    return redirect(request.referrer or url_for("admin_orders"))
+
 
 @app.route("/admin/user/<int:user_id>/delete", methods=["POST"])
 def admin_delete_user(user_id):
@@ -1450,7 +1678,6 @@ def admin_delete_user(user_id):
 
     user = User.query.get_or_404(user_id)
 
-    # Prevent deleting admin 
     if user.role == "admin":
         flash("You cannot delete an admin account", "danger")
         return redirect(url_for("admin_users"))

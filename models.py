@@ -108,7 +108,7 @@ class Payment(db.Model):
 
     order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), unique=True)
 
-    order = db.relationship("Order", backref="payment")
+    order = db.relationship("Order", backref=db.backref("payment", uselist=False))
 
     vendor_amount = db.Column(db.Float, default=0)
     platform_amount = db.Column(db.Float, default=0)

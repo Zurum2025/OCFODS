@@ -1,11 +1,87 @@
 {% extends "admin/admin_layout.html" %}
 
 {% block admin_content %}
-<h1>Admin Dashboard</h1>
 
-<div class="stats">
-    <div class="card">Total Users: {{ user_count }}</div>
-    <div class="card">Total Foods: {{ food_count }}</div>
-    <div class="card">Total Orders: {{ order_count }}</div>
+<div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <p>Platform overview and quick stats</p>
 </div>
+
+{% if unverified_vendors > 0 %}
+<div class="admin-alert">
+    ⚠️ {{ unverified_vendors }} vendor(s) have not verified a payout account yet.
+    <a href="{{ url_for('admin_vendors') }}">Review vendors</a>
+</div>
+{% endif %}
+
+<div class="analytics-grid">
+    <div class="analytics-card">
+        <h3>Total Users</h3>
+        <p>{{ user_count }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Students</h3>
+        <p>{{ student_count }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Vendors</h3>
+        <p>{{ vendor_count }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Total Foods</h3>
+        <p>{{ food_count }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Total Orders</h3>
+        <p>{{ order_count }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Total Transacted</h3>
+        <p>₦{{ "{:,.0f}".format(total_transacted) }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Platform Revenue</h3>
+        <p>₦{{ "{:,.0f}".format(total_revenue) }}</p>
+    </div>
+</div>
+
+<div class="admin-section">
+    <h2>Recent Orders</h2>
+
+    {% if recent_orders %}
+    <table class="app-table">
+        <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Vendor</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th></th>
+        </tr>
+        {% for order in recent_orders %}
+        <tr>
+            <td>#{{ order.id }}</td>
+            <td>{{ order.customer.name }}</td>
+            <td>{{ order.vendor.business_name }}</td>
+            <td>₦{{ "{:,.0f}".format(order.total_amount) }}</td>
+            <td><span class="status-badge status-{{ order.status }}">{{ order.status|capitalize }}</span></td>
+            <td>{{ order.order_date.strftime("%d %b %Y") }}</td>
+            <td><a href="{{ url_for('admin_order_details', order_id=order.id) }}">View</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p class="empty-state">No orders yet.</p>
+    {% endif %}
+</div>
+
+<div class="admin-quick-links">
+    <a href="{{ url_for('admin_users') }}" class="quick-link-card">👥 Manage Users</a>
+    <a href="{{ url_for('admin_vendors') }}" class="quick-link-card">🏪 Manage Vendors</a>
+    <a href="{{ url_for('admin_foods') }}" class="quick-link-card">🍽️ Manage Foods</a>
+    <a href="{{ url_for('admin_categories') }}" class="quick-link-card">🏷️ Manage Categories</a>
+    <a href="{{ url_for('admin_orders') }}" class="quick-link-card">📦 Manage Orders</a>
+</div>
+
 {% endblock %}

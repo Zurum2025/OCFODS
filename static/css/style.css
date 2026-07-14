@@ -1626,3 +1626,155 @@ textarea {
     }
 
 }
+
+/* ==========================
+   ADMIN SECTION
+========================== */
+
+.admin-sidebar .admin-brand h2 {
+    margin-bottom: 4px;
+    font-size: 1.3rem;
+}
+
+.admin-email {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-bottom: 1.5rem;
+    word-break: break-all;
+}
+
+.admin-sidebar .dashboard-nav a.active {
+    background: #f97316;
+    color: white;
+}
+
+.admin-alert {
+    background: #fff3cd;
+    color: #856404;
+    padding: 14px 20px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    font-weight: 500;
+}
+
+.admin-alert a {
+    color: #856404;
+    text-decoration: underline;
+    margin-left: 8px;
+}
+
+.admin-section {
+    background: white;
+    padding: 24px;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-top: 30px;
+}
+
+.admin-section h2 {
+    margin-bottom: 16px;
+    color: #111827;
+}
+
+.admin-quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 30px;
+}
+
+.quick-link-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    text-decoration: none;
+    color: #1f2933;
+    font-weight: 600;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.quick-link-card:hover {
+    transform: translateY(-4px);
+}
+
+.admin-filter-bar {
+    display: flex;
+    gap: 12px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.admin-filter-bar input,
+.admin-filter-bar select {
+    padding: 10px 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.admin-filter-bar input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.vendor-email {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.vendor-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.admin-vendor-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.admin-rating-list {
+    list-style: none;
+}
+
+.admin-rating-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.rating-date {
+    display: block;
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.inline-status-form {
+    display: flex;
+    gap: 8px;
+}
+
+.inline-status-form select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+}
+
+.status-pending {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.status-paid {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
