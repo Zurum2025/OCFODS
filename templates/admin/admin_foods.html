@@ -1,14 +1,44 @@
 {% extends "admin/admin_layout.html" %}
 
 {% block admin_content %}
-<h1>Foods</h1>
 
-<table>
+<div class="dashboard-header">
+    <h1>Foods</h1>
+    <p>{{ foods|length }} item(s) found</p>
+</div>
+
+<form method="GET" class="admin-filter-bar">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search food name">
+
+    <select name="vendor_id">
+        <option value="">All Vendors</option>
+        {% for vendor in vendors %}
+        <option value="{{ vendor.id }}" {% if selected_vendor == vendor.id %}selected{% endif %}>
+            {{ vendor.business_name }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <select name="category_id">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category.id }}" {% if selected_category == category.id %}selected{% endif %}>
+            {{ category.name }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn-view">Filter</button>
+</form>
+
+<table class="app-table">
     <tr>
         <th>Name</th>
         <th>Vendor</th>
         <th>Category</th>
         <th>Price</th>
+        <th>Availability</th>
+        <th>Actions</th>
     </tr>
 
     {% for food in foods %}
@@ -19,22 +49,18 @@
         <td>₦{{ food.price }}</td>
         <td>
             {% if food.availability %}
-                Available
+                <span class="badge badge-success">Available</span>
             {% else %}
-                Unavailable
+                <span class="badge badge-danger">Unavailable</span>
             {% endif %}
         </td>
-        <td>
-            <a href="{{ url_for('admin_toggle_food', food_id=food.id) }}">
-                Toggle
-            </a>
-            |
+        <td class="table-actions">
+            <a href="{{ url_for('admin_toggle_food', food_id=food.id) }}" class="btn-warning">Toggle</a>
             <a href="{{ url_for('admin_delete_food', food_id=food.id) }}"
-               onclick="return confirm('Delete this food?')">
-                Delete
-            </a>
-        </td>   
+               onclick="return confirm('Delete this food?')" class="btn-danger">Delete</a>
+        </td>
     </tr>
     {% endfor %}
 </table>
+
 {% endblock %}

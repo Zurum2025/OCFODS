@@ -1,0 +1,33 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block admin_content %}
+
+<div class="dashboard-header">
+    <h1>Food Categories</h1>
+    <p>{{ categories|length }} categories</p>
+</div>
+
+<form method="POST" class="admin-filter-bar">
+    <input type="text" name="name" placeholder="New category name" required>
+    <button type="submit" class="btn-view">Add Category</button>
+</form>
+
+<table class="app-table">
+    <tr><th>Name</th><th>Foods</th><th>Actions</th></tr>
+    {% for cat in categories %}
+    <tr>
+        <td>{{ cat.name }}</td>
+        <td>{{ cat.food_count }}</td>
+        <td>
+            <form action="{{ url_for('admin_delete_category', category_id=cat.id) }}" method="POST"
+                  onsubmit="return confirm('Delete this category?');" style="display:inline">
+                <button class="btn-danger" {% if cat.food_count > 0 %}disabled title="Category has foods assigned"{% endif %}>
+                    Delete
+                </button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}
