@@ -1,0 +1,68 @@
+{% extends "admin/admin_layout.html" %}
+
+{% block admin_content %}
+
+<div class="dashboard-header">
+    <h1>Order #{{ order.id }}</h1>
+    <p>Placed on {{ order.order_date.strftime("%d %b %Y, %I:%M %p") }}</p>
+</div>
+
+<div class="analytics-grid">
+    <div class="analytics-card">
+        <h3>Customer</h3>
+        <p style="font-size:18px">{{ order.customer.name }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Vendor</h3>
+        <p style="font-size:18px">{{ order.vendor.business_name }}</p>
+    </div>
+    <div class="analytics-card">
+        <h3>Status</h3>
+        <p><span class="status-badge status-{{ order.status }}">{{ order.status|capitalize }}</span></p>
+    </div>
+    <div class="analytics-card">
+        <h3>Total</h3>
+        <p>₦{{ "{:,.2f}".format(order.total_amount) }}</p>
+    </div>
+</div>
+
+<div class="admin-section">
+    <h2>Items</h2>
+    <table class="app-table">
+        <tr><th>Food</th><th>Qty</th><th>Subtotal</th></tr>
+        {% for item in order.items %}
+        <tr>
+            <td>{{ item.food.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₦{{ "{:,.2f}".format(item.subtotal) }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<div class="admin-section">
+    <h2>Delivery</h2>
+    <p>Distance: {{ "%.2f"|format(order.delivery_distance_km or 0) }} km</p>
+    <p>Transportation Fee: ₦{{ "{:,.2f}".format(order.transportation_fee or 0) }}</p>
+</div>
+
+{% if order.payment %}
+<div class="admin-section">
+    <h2>Payment</h2>
+    <p>Method: {{ order.payment.payment_method }}</p>
+    <p>Status: {{ order.payment.payment_status|capitalize }}</p>
+    <p>Vendor Amount: ₦{{ "{:,.2f}".format(order.payment.vendor_amount) }}</p>
+    <p>Platform Amount: ₦{{ "{:,.2f}".format(order.payment.platform_amount) }}</p>
+</div>
+{% endif %}
+
+{% if order.receipt_file %}
+<a href="{{ url_for('static', filename='receipts/' + order.receipt_file) }}" target="_blank" class="btn-view">
+    View Receipt
+</a>
+{% endif %}
+
+<br><br>
+<a href="{{ url_for('admin_orders') }}" class="btn-view">← Back to Orders</a>
+
+{% endblock %}
